@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>My Card Collection</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>My Card Collection</h1>
+  <div>
+    <label>Sort by:</label>
+    <select id="sortOptions">
+        <option value="dex">Sort by Dex</option>
+        <option value="name">Sort by Name</option>
+        <option value="set">Sort by Set</option>
+      </select>
+      
+      <select id="filterOptions">
+        <option value="all">Show All</option>
+        <option value="owned">Owned</option>
+        <option value="unowned">Unowned</option>
+      </select>
+  </div>
+  <ul id="cardList"></ul>
+
+  <!-- Firebase -->
+  <script type="module" src="script.js"></script>
+</body>
+</html>
