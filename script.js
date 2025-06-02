@@ -66,7 +66,12 @@ function renderCards(dataToRender = cards) {
       } else {
         filtered.sort((a, b) => a.set.localeCompare(b.set));
       }
+    } else if (sort === "price") {
+        filtered.sort((a, b) => (a.currentPrice || 0) - (b.currentPrice || 0));
+    } else if (sort === "price-desc") {
+        filtered.sort((a, b) => (b.currentPrice || 0) - (a.currentPrice || 0));
     }
+      
   
     // ✅ Then render as usual...
     cardList.innerHTML = "";
@@ -109,7 +114,7 @@ function renderCards(dataToRender = cards) {
         }
         cardList.appendChild(li);
       });
-    
+
       // Attach listeners AFTER rendering
     
       // Checkbox owned toggle
@@ -148,9 +153,6 @@ function renderCards(dataToRender = cards) {
         });
       });
       
-      
-      
-  
     
       // Edit buttons: just set editingId and re-render
       document.querySelectorAll(".edit-btn").forEach(button => {
@@ -193,8 +195,6 @@ function renderCards(dataToRender = cards) {
         });
     });
   
-      
-      
     
       // Edit form submit
       document.querySelectorAll(".edit-form").forEach(form => {
@@ -234,6 +234,8 @@ function renderCards(dataToRender = cards) {
 
 
     renderSetTabs(cards);
+    
+    updateOwnedCount(filtered);
 }
 
   
@@ -533,3 +535,31 @@ function normalizeSetName(setName) {
   
     return name;
   }  
+
+function updateOwnedCount(cards) {
+    const ownedCount = cards.filter(card => card.owned).length;
+    const totalCount = cards.length;
+    document.getElementById("ownedCountDisplay").textContent = `${ownedCount} / ${totalCount} owned`;
+}
+  
+
+const tabs = document.querySelectorAll(".tab-btn");
+const pages = {
+  cardCollection: document.getElementById("cardCollection"),
+  slabCollection: document.getElementById("slabCollection"),
+};
+
+tabs.forEach(tab => {
+  tab.addEventListener("click", () => {
+    // Remove active class from all tabs
+    tabs.forEach(t => t.classList.remove("active"));
+
+    // Hide all pages
+    Object.values(pages).forEach(page => page.style.display = "none");
+
+    // Activate clicked tab and show related page
+    tab.classList.add("active");
+    const target = tab.dataset.target;
+    pages[target].style.display = "block";
+  });
+});

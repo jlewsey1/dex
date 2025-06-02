@@ -6,53 +6,72 @@
   <link rel="stylesheet" href="style.css">
 </head> 
 <body>
-  <h1>My Card Collection</h1>
-  <div>
-    <h2>Add New Card</h2>
-    <form id="addCardForm">
-        <input type="text" id="cardName" placeholder="Name" required />
-        <input type="number" id="dexNumber" placeholder="Dex #" required />
-        <input type="text" id="set" placeholder="Set" required />
-        <input type="text" id="setNumber" placeholder="Set Number" />
-        <input type="number" id="currentPrice" placeholder="Current Price" />
-        <label><input type="checkbox" id="owned" /> Owned</label>
-        <button type="submit">Add Card</button>
-    </form>
-  </div>
-  <div>
-    <h2>Import Cards from CSV</h2>
-    <input type="file" id="csvInput" accept=".csv" />
-  </div>
-  <div>
-    <h2>Update Prices</h2>
-    <button id="bulkUpdatePricesBtn">Update All Prices</button>
-  </div>
-  <div>
-    <h2>Card List</h2>
-    <div id="setTabs" style="margin-bottom: 1rem;"></div>
-    <input type="text" id="searchInput" placeholder="Search by name...">
-    <label>Sort by:</label>
-    <select id="sortOptions">
-        <option value="dex">Sort by Dex</option>
-        <option value="name">Sort by Name</option>
-        <option value="set">Sort by Set</option>
-      </select>
-      
-      <select id="filterOptions">
-        <option value="all">Show All</option>
-        <option value="owned">Owned</option>
-        <option value="unowned">Unowned</option>
-      </select>
-  </div>
-  <ul id="cardList"></ul>
-  <div id="cardModal" style="display: none; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.7); z-index: 9999;">
-    <div id="modalContentWrapper" style="position: relative; background: white; padding: 1rem; border-radius: 12px; max-width: 400px; width: 90%; text-align: center;">
-      <span id="closeModal">×</span>
-      <div id="modalContent"></div>
+    <div id="tabs">
+        <button class="tab-btn active" data-target="cardCollection">Card Collection</button>
+        <button class="tab-btn" data-target="slabCollection">Slab Collection</button>
+        </div>
+        
+        <!-- Your existing card collection div -->
+        <div id="cardCollection">
+            <h1>My Card Collection</h1>
+            <div>
+                <h2>Add New Card</h2>
+                <form id="addCardForm">
+                    <input type="text" id="cardName" placeholder="Name" required />
+                    <input type="number" id="dexNumber" placeholder="Dex #" required />
+                    <input type="text" id="set" placeholder="Set" required />
+                    <input type="text" id="setNumber" placeholder="Set Number" />
+                    <input type="number" id="currentPrice" placeholder="Current Price" />
+                    <label><input type="checkbox" id="owned" /> Owned</label>
+                    <button type="submit">Add Card</button>
+                </form>
+            </div>
+            <div>
+                <h2>Import Cards from CSV</h2>
+                <input type="file" id="csvInput" accept=".csv" />
+            </div>
+            <div>
+                <h2>Update Prices</h2>
+                <button id="bulkUpdatePricesBtn">Update All Prices</button>
+            </div>
+            <div>
+                <h2>Card List</h2>
+                <p id="ownedCountDisplay">0 / 0 owned</p>
+                <div id="setTabs" style="margin-bottom: 1rem;"></div>
+                <input type="text" id="searchInput" placeholder="Search by name...">
+                <label>Sort by:</label>
+                <select id="sortOptions">
+                    <option value="dex">Sort by Dex</option>
+                    <option value="name">Sort by Name</option>
+                    <option value="set">Sort by Set</option>
+                    <option value="price">Sort by Price Low->High</option>
+                    <option value="price-desc">Sort by Price High->Low</option>
+                </select>
+                
+                <select id="filterOptions">
+                    <option value="all">Show All</option>
+                    <option value="owned">Owned</option>
+                    <option value="unowned">Unowned</option>
+                </select>
+            </div>
+            <ul id="cardList"></ul>
+            <div id="cardModal" style="display: none; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.7); z-index: 9999;">
+                <div id="modalContentWrapper" style="position: relative; background: white; padding: 1rem; border-radius: 12px; max-width: 400px; width: 90%; text-align: center;">
+                <span id="closeModal">×</span>
+                <div id="modalContent"></div>
+                </div>
+            </div>
+        
+        </div>
+        </div>
+        
+        <!-- New slab collection div, hidden by default -->
+    <div id="slabCollection" style="display:none;">
+        <h2>Slab Collection</h2>
+        <!-- Put slab collection content here -->
     </div>
-  </div>
+      
   
-  </div>
   
 
   <!-- Firebase -->

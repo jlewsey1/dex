@@ -134,3 +134,22 @@ body {
     white-space: nowrap;
   }
     
+  #tabs {
+    margin-bottom: 1rem;
+  }
+  
+  .tab-btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    background: #ddd;
+    cursor: pointer;
+    margin-right: 0.5rem;
+    border-radius: 5px 5px 0 0;
+  }
+  
+  .tab-btn.active {
+    background: #fff;
+    border-bottom: 2px solid blue;
+    font-weight: bold;
+  }
+  
