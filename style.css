@@ -153,3 +153,79 @@ body {
     font-weight: bold;
   }
   
+
+  .slabModal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0; top: 0;
+    width: 100%; height: 100%;
+    overflow: auto;
+    background-color: rgba(0,0,0,0.8);
+  }
+  .slabModal-content {
+    margin: 10% auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1rem;
+    background: white;
+    max-width: 500px;
+    border-radius: 12px;
+  }
+  .slabModal-content img {
+    max-width: 100%;
+    border-radius: 8px;
+  }
+  .slabClose {
+    align-self: flex-end;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+  #slabModal {
+    display: none; /* Changed to 'flex' when active */
+    position: fixed;
+    z-index: 9999;
+    top: 0; left: 0;
+    width: 100vw;
+    height: 100vh;
+    background-color: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
+  }
+  
+  #slabModalContentWrapper {
+    position: relative;
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    max-width: 400px;
+    width: 90%;
+    box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    text-align: center;
+    transform: scale(0.95);
+    opacity: 0;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+  
+  #slabModal.show #slabModalContentWrapper {
+    transform: scale(1);
+    opacity: 1;
+  }
+  
+  
+  #slabModalContentWrapper img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 8px;
+  }
+  
+  #slabCloseModal {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    cursor: pointer;
+    user-select: none;
+  }
+  

@@ -9,11 +9,12 @@
     <div id="tabs">
         <button class="tab-btn active" data-target="cardCollection">Card Collection</button>
         <button class="tab-btn" data-target="slabCollection">Slab Collection</button>
+        <button class="tab-btn" data-target="boxCollection">Box Collection</button>
         </div>
         
         <!-- Your existing card collection div -->
         <div id="cardCollection">
-            <h1>My Card Collection</h1>
+            <h1>Card Collection</h1>
             <div>
                 <h2>Add New Card</h2>
                 <form id="addCardForm">
@@ -66,11 +67,59 @@
         </div>
         
         <!-- New slab collection div, hidden by default -->
-    <div id="slabCollection" style="display:none;">
-        <h2>Slab Collection</h2>
-        <!-- Put slab collection content here -->
-    </div>
+        <div id="slabCollection" style="display:none;">
+            <h1>Slab Collection</h1>
+            <h2>Add New Slab</h2>
+            <form id="addSlabForm">
+            <input type="text" id="slabName" placeholder="Name" required />
+            <input type="number" id="slabDexNumber" placeholder="Dex #" required />
+            <input type="text" id="slabSet" placeholder="Set" required />
+            <input type="text" id="slabSetNumber" placeholder="Set Number" />
+            <input type="number" id="slabPrice" placeholder="Current Price" />
+            <input type="text" id="slabImageUrl" placeholder="Image URL" />
+            <label><input type="checkbox" id="owned" /> Owned</label>
+            <button type="submit">Add Slab</button>
+            </form>
+
+            <div>
+                <h2>Import Slabs from CSV</h2>
+                <input type="file" id="csvInput" accept=".csv" />
+            </div>
+
+            <div>
+                <h2>Slab List</h2>
+                <p id="ownedSlabCountDisplay">0 / 0 owned</p>
+                <input type="text" id="searchSlabInput" placeholder="Search by name...">
+                <label>Sort by:</label>
+                <select id="sortSlabOptions">
+                <option value="dex">Sort by Dex</option>
+                <option value="name">Sort by Name</option>
+                <option value="set">Sort by Set</option>
+                <option value="price">Sort by Price Low->High</option>
+                <option value="price-desc">Sort by Price High->Low</option>
+                </select>
+                
+                <select id="filterSlabOptions">
+                <option value="all">Show All</option>
+                <option value="owned">Owned</option>
+                <option value="unowned">Unowned</option>
+                </select>
+            </div>
+            
+            <ul id="slabList"></ul>
+            <div id="slabModal" style="display: none; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.7); z-index: 9999;">
+                <div id="slabModalContentWrapper" style="position: relative; background: white; padding: 1rem; border-radius: 12px; max-width: 400px; width: 90%; text-align: center;">
+                <span id="slabCloseModal">×</span>
+                <div id="slabModalContent"></div>
+                </div>
+            </div>
+        </div>
       
+
+        <div id="boxCollection" style="display:none;">
+            <h1>Box Collection</h1>
+            <!-- Put box collection content here -->
+        </div>
   
   
 

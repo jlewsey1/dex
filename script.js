@@ -1,8 +1,10 @@
 // Import Firebase from CDN
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+    getFirestore, collection, getDocs, doc,
+    updateDoc, addDoc, deleteDoc, onSnapshot
+  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+  
 
 
 // Your Firebase config
@@ -304,8 +306,6 @@ document.getElementById("csvInput").addEventListener("change", async (e) => {
     alert("Cards imported successfully!");
     fetchCards(); // Refresh list
   });
-  
-  
 
 
 // TCGPLAYER USAGE
@@ -436,7 +436,7 @@ function renderSetTabs() {
         "Call of Legends",
         "Black & White", "Emerging Powers", "Noble Victories", "Next Destinies", "Dark Explorers", "Dragons Exalted", "Boundaries Crossed",
         "Plasma Storm", "Plasma Freeze", "Plasma Blast", "Legendary Treasures", "BW Radiant Collection",
-        "XY", "Flashfire", "Furious Fists", "Phantom Forces", "Primal Clash", "Double Crisis", "Roaring Skies", "Ancient Origins", 
+        "XY Promos", "XY", "Flashfire", "Furious Fists", "Phantom Forces", "Primal Clash", "Double Crisis", "Roaring Skies", "Ancient Origins", 
         "BREAKthrough", "BREAKpoint", "Generations", "Fates Collide", "Steam Siege", "Evolutions",
         "Sun & Moon", "Guardians Rising", "Burning Shadows", "Shining Legends", "Crimson Invasion", "Ultra Prism", "Forbidden Light",
         "Celestial Storm", "Dragon Majesty", "Lost Thunder", "Team Up", "Unbroken Bonds", "Unified Minds", "Hidden Fates", "Cosmic Eclipse",
@@ -542,11 +542,13 @@ function updateOwnedCount(cards) {
     document.getElementById("ownedCountDisplay").textContent = `${ownedCount} / ${totalCount} owned`;
 }
   
+// Card * Slab * Box tabs
 
 const tabs = document.querySelectorAll(".tab-btn");
 const pages = {
   cardCollection: document.getElementById("cardCollection"),
   slabCollection: document.getElementById("slabCollection"),
+  boxCollection: document.getElementById("boxCollection"),
 };
 
 tabs.forEach(tab => {
@@ -563,3 +565,114 @@ tabs.forEach(tab => {
     pages[target].style.display = "block";
   });
 });
+
+
+// SLAB STUFF
+let slabs = [];
+
+onSnapshot(collection(db, "slabs"), (snapshot) => {
+  slabs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  renderSlabs(slabs);
+});
+
+async function loadSlabs() {
+  const slabRef = collection(db, "slabs");
+  const slabSnapshot = await getDocs(slabRef);
+  slabs = slabSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  renderSlabs(slabs);
+}
+
+
+function renderSlabs(slabs) {
+    const slabList = document.getElementById('slabList');
+    const searchTerm = document.getElementById('searchSlabInput').value.toLowerCase();
+    const sortOption = document.getElementById('sortSlabOptions').value;
+    const filterOption = document.getElementById('filterSlabOptions').value;
+  
+    let filteredSlabs = slabs.filter(slab =>
+      slab.name.toLowerCase().includes(searchTerm) &&
+      (filterOption === 'all' ||
+       (filterOption === 'owned' && slab.owned) ||
+       (filterOption === 'unowned' && !slab.owned))
+    );
+  
+    if (sortOption === 'name') filteredSlabs.sort((a, b) => a.name.localeCompare(b.name));
+    else if (sortOption === 'dex') filteredSlabs.sort((a, b) => a.dexNumber - b.dexNumber);
+    else if (sortOption === 'set') filteredSlabs.sort((a, b) => a.set.localeCompare(b.set));
+    else if (sortOption === 'price') filteredSlabs.sort((a, b) => a.currentPrice - b.currentPrice);
+    else if (sortOption === 'price-desc') filteredSlabs.sort((a, b) => b.currentPrice - a.currentPrice);
+  
+    slabList.innerHTML = '';
+    let ownedCount = 0;
+  
+    filteredSlabs.forEach(slab => {
+      if (slab.owned) ownedCount++;
+  
+      const li = document.createElement('li');
+      li.classList.add('slab');
+      li.innerHTML = `
+        <label>
+          <input type="checkbox" ${slab.owned ? "checked" : ""} data-id="${slab.id}">
+          <strong 
+            class="slab-name" 
+            data-slabname="${slab.name}" 
+            data-imageurl="${slab.imageUrl}" 
+            style="cursor: pointer; color: blue;">
+            ${slab.name}
+          </strong><br>
+          Dex #: ${slab.dexNumber} | Set: ${slab.set} | Set #: ${slab.setNumber}<br>
+          Current Price: $${slab.currentPrice?.toFixed(2) || "0.00"}
+        </label>
+        <button class="edit-btn" data-id="${slab.id}">Edit</button>
+        <button class="delete-btn" data-id="${slab.id}">Delete</button>
+      `;
+      li.addEventListener('click', () => openModal(slab));
+      slabList.appendChild(li);
+    });
+  
+    // modal part
+    document.querySelectorAll(".slab-name").forEach(el => {
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    
+        const imageUrl = el.dataset.imageurl;
+        const slabName = el.dataset.slabname;
+    
+        console.log("Opening modal with:", { imageUrl, slabName }); // <-- DEBUG HERE
+
+        openSlabModal(imageUrl, slabName);
+      });
+    });
+    
+
+    document.getElementById('ownedSlabCountDisplay').textContent = `${ownedCount} / ${filteredSlabs.length} owned`;
+  }
+  // Open slab modal example
+  function openSlabModal(imageUrl, slabName) {
+    const modal = document.getElementById("slabModal");
+    const modalContent = document.getElementById("slabModalContent");
+  
+    modal.style.display = "flex";
+    modal.classList.add("show");  // ADD THIS LINE to trigger opacity and scale transition
+  
+    modalContent.innerHTML = imageUrl
+      ? `<img src="${imageUrl}" alt="${slabName}" style="max-width:100%; height:auto; border-radius: 8px;"><p>${slabName}</p>`
+      : `<p>No image found for ${slabName}</p>`;
+  }
+  
+
+  document.getElementById("slabCloseModal").addEventListener("click", () => {
+    const modal = document.getElementById("slabModal");
+    modal.style.display = "none";
+    modal.classList.remove("show");  // REMOVE THE SHOW CLASS on close
+  });
+  
+  
+
+document.getElementById('searchSlabInput').addEventListener('input', () => renderSlabs(slabs));
+document.getElementById('sortSlabOptions').addEventListener('change', () => renderSlabs(slabs));
+document.getElementById('filterSlabOptions').addEventListener('change', () => renderSlabs(slabs));
+
+
+loadSlabs();
