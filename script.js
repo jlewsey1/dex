@@ -648,6 +648,7 @@ function renderSlabs(slabs) {
 
     document.getElementById('ownedSlabCountDisplay').textContent = `${ownedCount} / ${filteredSlabs.length} owned`;
   }
+
   // Open slab modal example
   function openSlabModal(imageUrl, slabName) {
     const modal = document.getElementById("slabModal");
@@ -674,5 +675,28 @@ document.getElementById('searchSlabInput').addEventListener('input', () => rende
 document.getElementById('sortSlabOptions').addEventListener('change', () => renderSlabs(slabs));
 document.getElementById('filterSlabOptions').addEventListener('change', () => renderSlabs(slabs));
 
-
 loadSlabs();
+
+document.getElementById("addSlabForm").addEventListener("submit", async (e) => {
+  console.log("Submitting slab:", newSlab);
+
+  e.preventDefault();
+
+  try {
+    const newSlab = {
+      name: document.getElementById("slabName").value,
+      dexNumber: parseInt(document.getElementById("slabDexNumber").value),
+      set: document.getElementById("slabSet").value,
+      setNumber: document.getElementById("slabSetNumber").value,
+      currentPrice: parseFloat(document.getElementById("slabPrice").value) || 0,
+      imageUrl: document.getElementById("slabImageUrl").value,
+      owned: document.getElementById("owned").checked,
+    };
+
+    await addDoc(collection(db, "slabs"), newSlab);
+    e.target.reset(); // Clear form after submission
+    console.log("Slab added successfully!");
+  } catch (error) {
+    console.error("Error adding slab:", error);
+  }
+});
