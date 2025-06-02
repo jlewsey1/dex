@@ -36,20 +36,39 @@ async function fetchCards() {
   renderCards(cards);
 }
 
+let activeSet = null; // null = all sets
+
 // Render cards
 function renderCards(dataToRender = cards) {
     let filtered = [...dataToRender];
   
+    // ✅ Filter by active tab (set)
+    if (activeSet !== null) {
+      filtered = filtered.filter(card => card.set === activeSet);
+    }
+  
+    // ✅ Apply dropdown filters
     const sort = sortOptions.value;
     const filter = filterOptions.value;
   
     if (filter === "owned") filtered = filtered.filter(card => card.owned);
     else if (filter === "unowned") filtered = filtered.filter(card => !card.owned);
   
-    if (sort === "name") filtered.sort((a, b) => a.name.localeCompare(b.name));
-    else if (sort === "dex") filtered.sort((a, b) => a.dexNumber - b.dexNumber);
-    else if (sort === "set") filtered.sort((a, b) => a.set.localeCompare(b.set));
+    // ✅ Apply sorting
+    if (sort === "name") {
+      filtered.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sort === "dex") {
+      filtered.sort((a, b) => a.dexNumber - b.dexNumber);
+    } else if (sort === "set") {
+      if (activeSet !== null) {
+        // 🔠 Sort by alphanumeric setNumber within the set
+        filtered.sort((a, b) => a.setNumber.localeCompare(b.setNumber, undefined, { numeric: true, sensitivity: 'base' }));
+      } else {
+        filtered.sort((a, b) => a.set.localeCompare(b.set));
+      }
+    }
   
+    // ✅ Then render as usual...
     cardList.innerHTML = "";
   
     filtered.forEach(card => {
@@ -63,7 +82,6 @@ function renderCards(dataToRender = cards) {
               <input name="dexNumber" type="number" value="${card.dexNumber}" required />
               <input name="set" value="${card.set}" required />
               <input name="setNumber" value="${card.setNumber}" />
-              <input name="buyPrice" type="number" step="0.01" value="${card.buyPrice || 0}" />
               <input name="currentPrice" type="number" step="0.01" value="${card.currentPrice || 0}" />
               <label>
                 <input name="owned" type="checkbox" ${card.owned ? "checked" : ""} />
@@ -76,15 +94,18 @@ function renderCards(dataToRender = cards) {
         } else {
           // Normal card display with edit/delete buttons
           li.innerHTML = `
-            <label>
-              <input type="checkbox" ${card.owned ? "checked" : ""} data-id="${card.id}">
-              <strong>${card.name}</strong><br>
-              Dex #: ${card.dexNumber} | Set: ${card.set} | Set #: ${card.setNumber}<br>
-              Buy Price: $${card.buyPrice?.toFixed(2) || "0.00"} | Current Price: $${card.currentPrice?.toFixed(2) || "0.00"}
-            </label>
-            <button class="edit-btn" data-id="${card.id}">Edit</button>
-            <button class="delete-btn" data-id="${card.id}">Delete</button>
-          `;
+          <label>
+            <input type="checkbox" ${card.owned ? "checked" : ""} data-id="${card.id}">
+            <strong class="card-name" data-set="${card.set}" data-setnumber="${card.setNumber}" style="cursor: pointer; color: blue;">
+              ${card.name}
+            </strong><br>
+            Dex #: ${card.dexNumber} | Set: ${card.set} | Set #: ${card.setNumber}<br>
+            Current Price: $${card.currentPrice?.toFixed(2) || "0.00"}
+          </label>
+          <button class="edit-btn" data-id="${card.id}">Edit</button>
+          <button class="delete-btn" data-id="${card.id}">Delete</button>
+          <button class="update-price-btn" data-id="${card.id}" data-setnumber="${card.setNumber}">Update Price</button>
+        `;        
         }
         cardList.appendChild(li);
       });
@@ -105,6 +126,31 @@ function renderCards(dataToRender = cards) {
           });
         }
       });
+
+
+      // open modal
+      document.querySelectorAll(".card-name").forEach(el => {
+        el.addEventListener("click", async (e) => {
+          e.preventDefault();
+          e.stopPropagation(); // Prevents toggling the checkbox
+      
+          const setNumber = e.target.dataset.setnumber;
+      
+          const imageUrl = await fetchCardImageFromTCG(setNumber);
+      
+          const modal = document.getElementById("cardModal");
+          const modalContent = document.getElementById("modalContent");
+          modal.style.display = "flex";
+          modal.classList.add("show");
+          modalContent.innerHTML = imageUrl
+            ? `<img src="${imageUrl}" alt="Card Image" style="max-width:100%; height:auto;">`
+            : `<p>No image found for ${setNumber}</p>`;
+        });
+      });
+      
+      
+      
+  
     
       // Edit buttons: just set editingId and re-render
       document.querySelectorAll(".edit-btn").forEach(button => {
@@ -125,6 +171,30 @@ function renderCards(dataToRender = cards) {
           renderCards(cards);
         });
       });
+      
+      // Update price button
+    document.querySelectorAll(".update-price-btn").forEach(button => {
+        button.addEventListener("click", async (e) => {
+        const cardId = e.target.dataset.id;
+        const setNumber = e.target.dataset.setnumber;
+    
+        try {
+            const price = await fetchPriceFromPokemonTCG(setNumber);
+            if (price !== null) {
+            await updateCardPrice(cardId, price);
+            alert(`✅ Price updated to $${price.toFixed(2)}`);
+            } else {
+            alert("❌ Price not found.");
+            }
+        } catch (err) {
+            console.error("Error updating price:", err);
+            alert("⚠️ Failed to update price.");
+        }
+        });
+    });
+  
+      
+      
     
       // Edit form submit
       document.querySelectorAll(".edit-form").forEach(form => {
@@ -138,7 +208,6 @@ function renderCards(dataToRender = cards) {
             dexNumber: parseInt(formData.get("dexNumber")),
             set: formData.get("set"),
             setNumber: formData.get("setNumber"),
-            buyPrice: parseFloat(formData.get("buyPrice")) || 0,
             currentPrice: parseFloat(formData.get("currentPrice")) || 0,
             owned: formData.get("owned") === "on",
           };
@@ -162,7 +231,10 @@ function renderCards(dataToRender = cards) {
           renderCards(cards);
         });
       });
-    }
+
+
+    renderSetTabs(cards);
+}
 
   
   
@@ -189,7 +261,6 @@ const newCard = {
     dexNumber: parseInt(document.getElementById("dexNumber").value),
     set: document.getElementById("set").value,
     setNumber: document.getElementById("setNumber").value,
-    buyPrice: parseFloat(document.getElementById("buyPrice").value) || 0,
     currentPrice: parseFloat(document.getElementById("currentPrice").value) || 0,
     owned: document.getElementById("owned").checked,
 };
@@ -219,7 +290,7 @@ document.getElementById("csvInput").addEventListener("change", async (e) => {
       headers.forEach((header, idx) => {
         let val = values[idx];
         if (header === "dexNumber") card[header] = parseInt(val);
-        else if (header === "buyPrice" || header === "currentPrice") card[header] = parseFloat(val);
+        else if (header === "currentPrice") card[header] = parseFloat(val);
         else if (header === "owned") card[header] = val.toLowerCase() === "true";
         else card[header] = val;
       });
@@ -233,3 +304,225 @@ document.getElementById("csvInput").addEventListener("change", async (e) => {
   });
   
   
+
+
+// TCGPLAYER USAGE
+const modal = document.getElementById("cardModal");
+
+
+// Close modal when clicking the "X"
+document.getElementById("closeModal").addEventListener("click", () => {
+    document.getElementById("cardModal").style.display = "none";
+  });
+  
+  // Close modal when clicking outside the content
+  document.getElementById("cardModal").addEventListener("click", (e) => {
+    if (e.target.id === "cardModal") {
+      document.getElementById("cardModal").style.display = "none";
+    }
+  });
+
+
+  
+  
+
+  async function fetchCardImageFromTCG(setNumber) {
+    const query = `id:${setNumber}`;
+    const url = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(query)}`;
+  
+    const response = await fetch(url);
+    const data = await response.json();
+  
+    if (data?.data?.length > 0) {
+      return data.data[0].images.large || null;
+    }
+    return null;
+  }
+  
+  
+  async function updateCardPrice(cardId, newPrice) {
+    const cardRef = doc(db, "cards", cardId);
+    await updateDoc(cardRef, { currentPrice: newPrice });
+  
+    const cardIndex = cards.findIndex(c => c.id === cardId);
+    if (cardIndex !== -1) {
+      cards[cardIndex].currentPrice = newPrice;
+      renderCards(cards);
+    }
+  }
+
+ document.getElementById("bulkUpdatePricesBtn").addEventListener("click", async () => {
+  if (!confirm("This will update prices for ALL cards. Continue?")) return;
+
+  const bulkBtn = document.getElementById("bulkUpdatePricesBtn");
+  bulkBtn.disabled = true;
+  bulkBtn.textContent = "Updating Prices...";
+
+  let updatedCount = 0;
+  let failedCount = 0;
+  for (const [index, card] of cards.entries()) {
+    try {
+      const fullCardId = card.setNumber; // Ensure this is like 'sv3-112'
+  
+      const price = await fetchPriceFromPokemonTCG(fullCardId);
+      if (price !== null) {
+        await updateCardPrice(card.id, price);
+        updatedCount++;
+      } else {
+        failedCount++;
+        console.warn(`No price found for ${card.name} (${card.setNumber})`);
+      }
+    } catch (err) {
+      console.error(`❌ Error updating ${card.name}:`, err);
+      failedCount++;
+    }
+  
+    await new Promise(resolve => setTimeout(resolve, 200));
+  }
+
+  bulkBtn.disabled = false;
+  bulkBtn.textContent = "Update All Prices";
+
+  alert(`✅ Prices updated for ${updatedCount} card(s).\n❌ Failed to update ${failedCount}.`);
+});
+
+  
+// update price button
+async function fetchPriceFromPokemonTCG(cardId) {
+    const url = `https://api.pokemontcg.io/v2/cards/${encodeURIComponent(cardId)}`;
+    console.log("Fetching card price from:", url);
+    
+    const response = await fetch(url);
+    const data = await response.json();
+    
+    if (data?.data) {
+        console.log("TCG API response:", data.data);
+        return (
+        data.data.tcgplayer?.prices?.holofoil?.market ||  // preferred price type
+        data.data.tcgplayer?.prices?.normal?.market ||    // fallback
+        null
+        );
+    }
+    
+    return null;
+    }
+
+function renderSetTabs() {
+    const tabContainer = document.getElementById("setTabs");
+    tabContainer.innerHTML = "";
+    
+    const sets = [
+        "Base Set", "Jungle", "Fossil", "Base Set 2", "Team Rocket",
+        "Gym Heroes", "Gym Challenge",
+        "Neo Genesis", "Neo Discovery", "Neo Revelation", "Neo Destiny", 
+        "Legendary Collection",
+        "Expedition","Aquapolis", "Skyridge",
+        "EX Ruby & Sapphire", "EX Sandstorm", "EX Dragon", "EX Team Magma vs Team Aqua", "EX Hidden Legends", "EX FireRed & LeafGreen",
+        "EX Team Rocket Returns", "EX Deoxys", "EX Emerald", "EX Unseen Forces", "EX Delta Species", "EX Legend Maker", "EX Holon Phantoms",
+        "EX Crystal Guardians", "EX Dragon Frontiers", "EX Power Keepers",
+        "Diamond & Pearl", "Mysterious Treasures", "Secret Wonders", "Great Encounters", "Majestic Dawn", "Legends Awakened", "Stormfront",
+        "Pop Promos",
+        "Platinum", "Rising Rivals", "Supreme Victors", "Arceus", 
+        "HeartGold & SoulSilver", "Unleashed", "Undaunted", "Triumphant",
+        "Call of Legends",
+        "Black & White", "Emerging Powers", "Noble Victories", "Next Destinies", "Dark Explorers", "Dragons Exalted", "Boundaries Crossed",
+        "Plasma Storm", "Plasma Freeze", "Plasma Blast", "Legendary Treasures", "BW Radiant Collection",
+        "XY", "Flashfire", "Furious Fists", "Phantom Forces", "Primal Clash", "Double Crisis", "Roaring Skies", "Ancient Origins", 
+        "BREAKthrough", "BREAKpoint", "Generations", "Fates Collide", "Steam Siege", "Evolutions",
+        "Sun & Moon", "Guardians Rising", "Burning Shadows", "Shining Legends", "Crimson Invasion", "Ultra Prism", "Forbidden Light",
+        "Celestial Storm", "Dragon Majesty", "Lost Thunder", "Team Up", "Unbroken Bonds", "Unified Minds", "Hidden Fates", "Cosmic Eclipse",
+        "SWSH Promos", "Sword & Shield", "Rebel Clash", "Darkness Ablaze", "Champion's Path", "Vivid Voltage", "Battle Styles", "Chilling Reign",
+        "Evolving Skies", "Fusion Strike", "Brilliant Stars", "Brilliant Stars Trainer Gallery", "Astral Radiance", "Astral Radiance Trainer Gallery", 
+        "Lost Origin", "Lost Origin Trainer Gallery", "Silver Tempest", "Silver Tempest Trainer Gallery", "Crown Zenith", "Crown Zenith Galarian Gallery",
+        "SV Promos", "Scarlet & Violet", "Paldea Evolved", "Obsidian Flames", "151", "Paradox Rift", "Paldean Fates", "Temporal Forces",
+        "Twilight Masquerade", "Shrouded Fable", "Stellar Crown", "Surging Sparks", "Prismatic Evolutions", "Journey Together", "Destined Rvials",
+        "Black Bolt", "White Flare"
+    ];
+    
+    // Create a lookup map from lowercase set name to proper set name for display
+    const setsMap = new Map();
+    sets.forEach(setName => {
+      setsMap.set(normalizeSetName(setName), setName);
+    });    
+    
+    // Normalize sets in cards and get unique sets (lowercase normalized)
+    const cardSetsLower = new Set(cards.map(card => normalizeSetName(card.set)));
+
+    
+    // Filter sets that exist in cards (by lowercase match)
+    const filteredSets = sets.filter(setName => cardSetsLower.has(normalizeSetName(setName)));
+    
+    // Find any card sets not found in your master list (for debugging)
+    const unmatchedSets = [...cardSetsLower].filter(set => !setsMap.has(set));
+    if (unmatchedSets.length > 0) {
+        console.warn("Warning: card sets not matched to master list:", unmatchedSets);
+    }
+    
+    // Always add "All Sets" tab
+    const allTab = document.createElement("button");
+    allTab.textContent = "📚 All Sets";
+    allTab.className = "tab-button";
+    allTab.addEventListener("click", () => {
+        activeSet = null;
+        renderCards(cards);
+        setActiveTab(null);
+    });
+    tabContainer.appendChild(allTab);
+    
+    // Add tabs for filtered sets, using proper capitalization from setsMap
+    filteredSets.forEach(setName => {
+        const tab = document.createElement("button");
+        tab.textContent = setName; // setName is already proper case
+        tab.className = "tab-button";
+        tab.addEventListener("click", () => {
+        activeSet = setName;
+        renderCards(cards);
+        setActiveTab(setName);
+        });
+        tabContainer.appendChild(tab);
+    });
+    
+    // Highlight the active tab
+    function setActiveTab(setName) {
+        const tabs = tabContainer.querySelectorAll(".tab-button");
+        tabs.forEach(tab => {
+        tab.classList.toggle("active-tab", tab.textContent === setName || (setName === null && tab.textContent === "📚 All Sets"));
+        });
+    }
+    
+    setActiveTab(activeSet);
+}
+      
+function normalizeSetName(setName) {
+    if (!setName) return "";
+  
+    let name = setName.toLowerCase().trim();
+  
+    // Common aliases and fixes:
+    const replacements = [
+      // Fix spacing, typos, abbreviations, or alternate names
+      { from: /^base set 2.*$/, to: "base set 2" },
+      { from: /^team rocket returns$/, to: "ex team rocket returns" }, // example fix if some cards say "Team Rocket Returns" without EX prefix
+      { from: /^ex ruby and sapphire$/, to: "ex ruby & sapphire" },
+      { from: /^hgss$/, to: "heartgold & soulsilver" },
+      { from: /^bw radiant collection$/, to: "bw radiant collection" }, // just to show pattern
+      { from: /^sv promos$/, to: "sv promos" },
+      { from: /^xy flashfire$/, to: "flashfire" },
+      { from: /^ex hidden legends$/, to: "ex hidden legends" },
+      { from: /^pop promos$/, to: "pop promos" },
+      { from: /^brilliant stars trainer gallery$/, to: "brilliant stars trainer gallery" },
+      { from: /^astral radiance trainer gallery$/, to: "astral radiance trainer gallery" },
+      { from: /^lost origin trainer gallery$/, to: "lost origin trainer gallery" },
+      { from: /^silver tempest trainer gallery$/, to: "silver tempest trainer gallery" },
+      { from: /^crown zenith galarian gallery$/, to: "crown zenith galarian gallery" },
+      // Add more replacements as you discover variants
+    ];
+  
+    for (const rep of replacements) {
+      if (rep.from.test(name)) {
+        return rep.to;
+      }
+    }
+  
+    return name;
+  }  

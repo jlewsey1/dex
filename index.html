@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <title>My Card Collection</title>
   <link rel="stylesheet" href="style.css">
-</head>
+</head> 
 <body>
   <h1>My Card Collection</h1>
   <div>
@@ -14,7 +14,6 @@
         <input type="number" id="dexNumber" placeholder="Dex #" required />
         <input type="text" id="set" placeholder="Set" required />
         <input type="text" id="setNumber" placeholder="Set Number" />
-        <input type="number" id="buyPrice" placeholder="Buy Price" />
         <input type="number" id="currentPrice" placeholder="Current Price" />
         <label><input type="checkbox" id="owned" /> Owned</label>
         <button type="submit">Add Card</button>
@@ -25,7 +24,12 @@
     <input type="file" id="csvInput" accept=".csv" />
   </div>
   <div>
+    <h2>Update Prices</h2>
+    <button id="bulkUpdatePricesBtn">Update All Prices</button>
+  </div>
+  <div>
     <h2>Card List</h2>
+    <div id="setTabs" style="margin-bottom: 1rem;"></div>
     <input type="text" id="searchInput" placeholder="Search by name...">
     <label>Sort by:</label>
     <select id="sortOptions">
@@ -41,6 +45,15 @@
       </select>
   </div>
   <ul id="cardList"></ul>
+  <div id="cardModal" style="display: none; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.7); z-index: 9999;">
+    <div id="modalContentWrapper" style="position: relative; background: white; padding: 1rem; border-radius: 12px; max-width: 400px; width: 90%; text-align: center;">
+      <span id="closeModal">×</span>
+      <div id="modalContent"></div>
+    </div>
+  </div>
+  
+  </div>
+  
 
   <!-- Firebase -->
   <script type="module" src="script.js"></script>
