@@ -119,14 +119,18 @@ body {
     font-weight: bold;
   }
   
-  @media (max-width: 600px) {
-    .tab-button,
-    button, /* generic button selector, add other specific selectors if needed */
+  @media (max-width: 1000px) {
+    /* Target all your buttons */
+    button,
     .edit-btn,
     .delete-btn,
-    .add-card-btn {
-      transform: scale(2.5);
-      transform-origin: center;
+    .update-price-btn,
+    #addCardForm button {
+      font-size: 1em; 
+      padding: 1rem 2rem; /* increase padding for better tap target */
     }
   }
-  
+  button {
+    white-space: nowrap;
+  }
+    
