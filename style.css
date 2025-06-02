@@ -58,8 +58,8 @@ body {
     background: white;
     padding: 1rem;
     border-radius: 12px;
-    max-width: 400px;
-    width: 90%;
+    max-width: 75vw;
+    width: 550px;
     box-shadow: 0 0 20px rgba(0,0,0,0.3);
     text-align: center;
     transform: scale(0.95);
@@ -188,8 +188,8 @@ body {
     background: white;
     padding: 1rem;
     border-radius: 12px;
-    max-width: 400px;
-    width: 90%;
+    max-width: 75vw;
+    width: 550px;
     box-shadow: 0 0 20px rgba(0,0,0,0.3);
     text-align: center;
     transform: scale(0.95);
@@ -227,33 +227,5 @@ body {
     #addCardForm button {
       font-size: 1em; 
       padding: 1rem 2rem; /* increase padding for better tap target */
-    }
-
-    #modalContentWrapper,
-    #slabModalContentWrapper {
-      width: 95%;
-      max-width: none;
-      height: auto;
-      margin: 0 auto;
-      padding: 1.5rem;
-      border-radius: 10px;
-    }
-  
-    .modal-content,
-    .slabModal-content {
-      padding: 1.5rem;
-    }
-  
-    #cardModal,
-    #slabModal {
-      align-items: flex-start;
-      padding-top: 2rem;
-    }
-  
-    #closeModal,
-    #slabCloseModal {
-      top: 8px;
-      right: 12px;
-      font-size: 1.8rem;
     }
   }

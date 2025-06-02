@@ -150,7 +150,7 @@ function renderCards(dataToRender = cards) {
           modal.style.display = "flex";
           modal.classList.add("show");
           modalContent.innerHTML = imageUrl
-            ? `<img src="${imageUrl}" alt="Card Image" style="max-width:100%; height:auto;">`
+            ? `<img src="${imageUrl}" alt="Card Image" style="width:100%; max-height:85vh; object-fit:contain;">`
             : `<p>No image found for ${setNumber}</p>`;
         });
       });
