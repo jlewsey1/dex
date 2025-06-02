@@ -119,17 +119,6 @@ body {
     font-weight: bold;
   }
   
-  @media (max-width: 1000px) {
-    /* Target all your buttons */
-    button,
-    .edit-btn,
-    .delete-btn,
-    .update-price-btn,
-    #addCardForm button {
-      font-size: 1em; 
-      padding: 1rem 2rem; /* increase padding for better tap target */
-    }
-  }
   button {
     white-space: nowrap;
   }
@@ -229,3 +218,42 @@ body {
     user-select: none;
   }
   
+  @media (max-width: 800px) {
+    /* Target all your buttons */
+    button,
+    .edit-btn,
+    .delete-btn,
+    .update-price-btn,
+    #addCardForm button {
+      font-size: 1em; 
+      padding: 1rem 2rem; /* increase padding for better tap target */
+    }
+
+    #modalContentWrapper,
+    #slabModalContentWrapper {
+      width: 95%;
+      max-width: none;
+      height: auto;
+      margin: 0 auto;
+      padding: 1.5rem;
+      border-radius: 10px;
+    }
+  
+    .modal-content,
+    .slabModal-content {
+      padding: 1.5rem;
+    }
+  
+    #cardModal,
+    #slabModal {
+      align-items: flex-start;
+      padding-top: 2rem;
+    }
+  
+    #closeModal,
+    #slabCloseModal {
+      top: 8px;
+      right: 12px;
+      font-size: 1.8rem;
+    }
+  }
