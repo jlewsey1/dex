@@ -351,40 +351,47 @@ document.getElementById("closeModal").addEventListener("click", () => {
     }
   }
 
- document.getElementById("bulkUpdatePricesBtn").addEventListener("click", async () => {
-  if (!confirm("This will update prices for ALL cards. Continue?")) return;
-
-  const bulkBtn = document.getElementById("bulkUpdatePricesBtn");
-  bulkBtn.disabled = true;
-  bulkBtn.textContent = "Updating Prices...";
-
-  let updatedCount = 0;
-  let failedCount = 0;
-  for (const [index, card] of cards.entries()) {
-    try {
-      const fullCardId = card.setNumber; // Ensure this is like 'sv3-112'
+  document.getElementById("bulkUpdatePricesBtn").addEventListener("click", async () => {
+    if (!confirm("This will update prices for ALL cards in the current view. Continue?")) return;
   
-      const price = await fetchPriceFromPokemonTCG(fullCardId);
-      if (price !== null) {
-        await updateCardPrice(card.id, price);
-        updatedCount++;
-      } else {
+    const bulkBtn = document.getElementById("bulkUpdatePricesBtn");
+    bulkBtn.disabled = true;
+    bulkBtn.textContent = "Updating Prices...";
+  
+    // Filter cards based on activeSet: if null, update all cards; else only cards from activeSet
+    const cardsToUpdate = activeSet 
+      ? cards.filter(card => card.set === activeSet) 
+      : cards;
+  
+    let updatedCount = 0;
+    let failedCount = 0;
+  
+    for (const card of cardsToUpdate) {
+      try {
+        const fullCardId = card.setNumber; // e.g., 'sv3-112'
+  
+        const price = await fetchPriceFromPokemonTCG(fullCardId);
+        if (price !== null) {
+          await updateCardPrice(card.id, price);
+          updatedCount++;
+        } else {
+          failedCount++;
+          console.warn(`No price found for ${card.name} (${card.setNumber})`);
+        }
+      } catch (err) {
+        console.error(`❌ Error updating ${card.name}:`, err);
         failedCount++;
-        console.warn(`No price found for ${card.name} (${card.setNumber})`);
       }
-    } catch (err) {
-      console.error(`❌ Error updating ${card.name}:`, err);
-      failedCount++;
+  
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
   
-    await new Promise(resolve => setTimeout(resolve, 200));
-  }
-
-  bulkBtn.disabled = false;
-  bulkBtn.textContent = "Update All Prices";
-
-  alert(`✅ Prices updated for ${updatedCount} card(s).\n❌ Failed to update ${failedCount}.`);
-});
+    bulkBtn.disabled = false;
+    bulkBtn.textContent = "Update All Prices";
+  
+    alert(`✅ Prices updated for ${updatedCount} card(s).\n❌ Failed to update ${failedCount}.`);
+  });
+  
 
   
 // update price button
