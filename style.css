@@ -119,3 +119,14 @@ body {
     font-weight: bold;
   }
   
+  @media (max-width: 600px) {
+    .tab-button,
+    button, /* generic button selector, add other specific selectors if needed */
+    .edit-btn,
+    .delete-btn,
+    .add-card-btn {
+      transform: scale(2.5);
+      transform-origin: center;
+    }
+  }
+  
