@@ -610,7 +610,27 @@ function renderSlabs(slabs) {
   
       const li = document.createElement('li');
       li.classList.add('slab');
-      li.innerHTML = `
+
+      if (slab.id === editingId) {
+        // Render edit form for this slab
+        li.innerHTML = `
+          <form class="edit-slab-form" data-id="${slab.id}">
+            <input name="name" value="${slab.name}" required />
+            <input name="dexNumber" type="number" value="${slab.dexNumber}" required />
+            <input name="set" value="${slab.set}" required />
+            <input name="setNumber" value="${slab.setNumber}" />
+            <input name="currentPrice" type="number" step="0.01" value="${slab.currentPrice || 0}" />
+            <input name="imageURL" value="${slab.imageUrl}" required />
+            <label>
+              <input name="owned" type="checkbox" ${slab.owned ? "checked" : ""} />
+              Owned
+            </label>
+            <button type="submit">Save</button>
+            <button type="button" class="cancel-slab-btn">Cancel</button>
+          </form>
+        `;
+      } else {
+        li.innerHTML = `
         <label>
           <input type="checkbox" ${slab.owned ? "checked" : ""} data-id="${slab.id}">
           <strong 
@@ -623,9 +643,11 @@ function renderSlabs(slabs) {
           Dex #: ${slab.dexNumber} | Set: ${slab.set} | Set #: ${slab.setNumber}<br>
           Current Price: $${slab.currentPrice?.toFixed(2) || "0.00"}
         </label>
-        <button class="edit-btn" data-id="${slab.id}">Edit</button>
-        <button class="delete-btn" data-id="${slab.id}">Delete</button>
+        <button class="edit-slab-btn" data-id="${slab.id}">Edit</button>
+        <button class="delete-slab-btn" data-id="${slab.id}">Delete</button>
       `;
+      }
+
       li.addEventListener('click', () => openModal(slab));
       slabList.appendChild(li);
     });
@@ -645,6 +667,62 @@ function renderSlabs(slabs) {
       });
     });
     
+    // Edit buttons: just set editingId and re-render
+    document.querySelectorAll(".edit-slab-btn").forEach(button => {
+      button.addEventListener("click", (e) => {
+        editingId = e.target.dataset.id;
+        renderSlabs(slabs);
+      });
+    });
+  
+    // Delete buttons
+    document.querySelectorAll(".delete-slab-btn").forEach(button => {
+      button.addEventListener("click", async (e) => {
+        const slabId = e.target.dataset.id;
+        if (!confirm("Are you sure you want to delete this slab?")) return;
+  
+        await deleteDoc(doc(db, "slabs", slabId));
+        slabs = slabs.filter(s => s.id !== slabId);
+        renderSlabs(slabs);
+      });
+    });
+
+    // Edit form submit
+    document.querySelectorAll(".edit-slab-form").forEach(form => {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const slabId = form.dataset.id;
+  
+        const formData = new FormData(form);
+        const updatedSlab = {
+          name: formData.get("name"),
+          dexNumber: parseInt(formData.get("dexNumber")),
+          set: formData.get("set"),
+          setNumber: formData.get("setNumber"),
+          currentPrice: parseFloat(formData.get("currentPrice")) || 0,
+          imageUrl: formData.get("imageUrl"),
+          owned: formData.get("owned") === "on",
+        };
+  
+        const slabRef = doc(db, "slabs", slabId);
+        await updateDoc(slabRef, updatedSlab);
+  
+        // Update local data
+        const slabIndex = slabs.findIndex(s => s.id === slabId);
+        slabs[slabIndex] = { id: slabId, ...updatedSlab };
+  
+        editingId = null;
+        renderSlabs(slabs);
+      });
+    });
+  
+    // Cancel button (just cancel editing)
+    document.querySelectorAll(".cancel-slab-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        editingId = null;
+        renderSlabs(slabs);
+      });
+    });
 
     document.getElementById('ownedSlabCountDisplay').textContent = `${ownedCount} / ${filteredSlabs.length} owned`;
   }
@@ -712,3 +790,46 @@ document.getElementById("addSlabForm").addEventListener("submit", async (e) => {
     console.error("Error adding slab:", error);
   }
 });
+
+document.getElementById("csvSlabInput").addEventListener("change", async (e) => {
+  console.log("File selected!");
+
+  const file = e.target.files[0];
+  if (!file) return console.warn("No file selected.");
+
+  const text = await file.text();
+  console.log("File contents:", text);
+
+  const rows = text.trim().split("\n");
+  const headers = rows[0].split(",").map(h => h.trim());
+
+  for (let i = 1; i < rows.length; i++) {
+    const values = rows[i].split(",").map(v => v.trim());
+    // Skip empty or incomplete rows
+    if (values.length !== headers.length) {
+      console.warn(`Skipping malformed row ${i + 1}: ${rows[i]}`);
+      continue;
+    }
+    const slab = {};
+    headers.forEach((header, idx) => {
+      let val = values[idx];
+      if (header === "dexNumber") {
+        slab[header] = parseInt(val) || 0;
+      } else if (header === "currentPrice") {
+        slab[header] = parseFloat(val) || 0;
+      } else if (header === "owned") {
+        slab[header] = val.toLowerCase() === "true";
+      } else {
+        slab[header] = val;
+      }
+    });
+    console.log("Adding slab to Firestore:", slab);
+    try {
+      await addDoc(collection(db, "slabs"), slab);
+    } catch (err) {
+      console.error("Error adding slab:", err);
+    }
+  }
+  alert("Slabs imported successfully!");
+});
+
