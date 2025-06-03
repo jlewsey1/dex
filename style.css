@@ -59,7 +59,6 @@ body {
     padding: 1rem;
     border-radius: 12px;
     max-width: 75vw;
-    width: 550px;
     box-shadow: 0 0 20px rgba(0,0,0,0.3);
     text-align: center;
     transform: scale(0.95);
@@ -159,7 +158,8 @@ body {
     align-items: center;
     padding: 1rem;
     background: white;
-    max-width: 500px;
+    max-width: 50vw;
+    max-height: 75vh;
     border-radius: 12px;
   }
   .slabModal-content img {
@@ -171,43 +171,12 @@ body {
     font-size: 1.5rem;
     cursor: pointer;
   }
-  #slabModal {
-    display: none; /* Changed to 'flex' when active */
-    position: fixed;
-    z-index: 9999;
-    top: 0; left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: rgba(0, 0, 0, 0.7);
-    justify-content: center;
-    align-items: center;
-  }
-  
-  #slabModalContentWrapper {
-    position: relative;
-    background: white;
-    padding: 1rem;
-    border-radius: 12px;
-    max-width: 75vw;
-    width: 550px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.3);
-    text-align: center;
-    transform: scale(0.95);
-    opacity: 0;
-    transition: transform 0.2s ease, opacity 0.2s ease;
-  }
   
   #slabModal.show #slabModalContentWrapper {
     transform: scale(1);
     opacity: 1;
   }
   
-  
-  #slabModalContentWrapper img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 8px;
-  }
   
   #slabCloseModal {
     position: absolute;
@@ -218,6 +187,25 @@ body {
     user-select: none;
   }
   
+  #slabModalContentWrapper {
+    position: relative;
+    background: white;
+    padding: 1rem;
+    border-radius: 12px;
+    max-height: 75vh;
+    max-width: 600px;
+    width: 45%;
+    text-align: center;
+  }
+
+  #slabModalContentWrapper img {
+    max-width: 100%;
+    max-height: 75vh;
+    height: auto;
+    border-radius: 8px;
+  }
+  
+
   @media (max-width: 800px) {
     /* Target all your buttons */
     button,
@@ -225,7 +213,12 @@ body {
     .delete-btn,
     .update-price-btn,
     #addCardForm button {
-      font-size: 1em; 
-      padding: 1rem 2rem; /* increase padding for better tap target */
+      font-size: 0.5em; 
+    }
+
+    #slabModalContentWrapper {
+      max-width: 650px;
+      width: 70%;
     }
   }
+

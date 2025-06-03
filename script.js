@@ -663,13 +663,25 @@ function renderSlabs(slabs) {
   }
   
 
-  document.getElementById("slabCloseModal").addEventListener("click", () => {
-    const modal = document.getElementById("slabModal");
-    modal.style.display = "none";
-    modal.classList.remove("show");  // REMOVE THE SHOW CLASS on close
-  });
-  
-  
+document.getElementById("slabCloseModal").addEventListener("click", () => {
+  console.log("This is a test");
+  const modal = document.getElementById("slabModal");
+  modal.style.display = "none";
+  modal.classList.remove("show");
+});
+
+  // Close slab modal when clicking outside the content
+document.getElementById("slabModal").addEventListener("click", (e) => {
+  const wrapper = document.getElementById("slabModalContentWrapper");
+
+  // If the click is outside the modal content wrapper, close
+  if (!wrapper.contains(e.target)) {
+    e.stopPropagation(); // Optional: prevent event bubbling
+    document.getElementById("slabModal").style.display = "none";
+    document.getElementById("slabModal").classList.remove("show");
+  }
+});
+
 
 document.getElementById('searchSlabInput').addEventListener('input', () => renderSlabs(slabs));
 document.getElementById('sortSlabOptions').addEventListener('change', () => renderSlabs(slabs));
@@ -678,8 +690,6 @@ document.getElementById('filterSlabOptions').addEventListener('change', () => re
 loadSlabs();
 
 document.getElementById("addSlabForm").addEventListener("submit", async (e) => {
-  console.log("Submitting slab:", newSlab);
-
   e.preventDefault();
 
   try {
@@ -692,6 +702,8 @@ document.getElementById("addSlabForm").addEventListener("submit", async (e) => {
       imageUrl: document.getElementById("slabImageUrl").value,
       owned: document.getElementById("owned").checked,
     };
+    console.log("Submitting slab:", newSlab); // ✅ now it's defined!
+
 
     await addDoc(collection(db, "slabs"), newSlab);
     e.target.reset(); // Clear form after submission
