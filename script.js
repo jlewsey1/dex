@@ -106,7 +106,9 @@ function renderCards(dataToRender = cards) {
             <strong class="card-name" data-set="${card.set}" data-setnumber="${card.setNumber}" style="cursor: pointer; color: blue;">
               ${card.name}
             </strong><br>
-            Dex #: ${card.dexNumber} | Set: ${card.set} | Set #: ${card.setNumber}<br>
+            ${card.dexNumber === 9999 ? "Trainer" : `Pokédex #${card.dexNumber}`}<br>
+            Set: ${card.set}<br>
+            Set ID: ${card.setNumber}<br>
             Current Price: $${card.currentPrice?.toFixed(2) || "0.00"}
           </label>
           <button class="edit-btn" data-id="${card.id}">Edit</button>
@@ -524,6 +526,7 @@ function normalizeSetName(setName) {
       { from: /^lost origin trainer gallery$/, to: "lost origin trainer gallery" },
       { from: /^silver tempest trainer gallery$/, to: "silver tempest trainer gallery" },
       { from: /^crown zenith galarian gallery$/, to: "crown zenith galarian gallery" },
+      { from: /^bandit ring$/, to: "ancient origins" },
       // Add more replacements as you discover variants
     ];
   
@@ -589,18 +592,34 @@ function renderSlabs(slabs) {
     const sortOption = document.getElementById('sortSlabOptions').value;
     const filterOption = document.getElementById('filterSlabOptions').value;
   
-    let filteredSlabs = slabs.filter(slab =>
+    let filteredSlabs = slabs;
+
+    // 1. Filter by active tab (set)
+    if (activeSet) {
+      filteredSlabs = filteredSlabs.filter(slab => normalizeSetName(slab.set) === normalizeSetName(activeSet));
+    }
+    
+    // 2. Apply name search and ownership filter
+    filteredSlabs = filteredSlabs.filter(slab =>
       slab.name.toLowerCase().includes(searchTerm) &&
       (filterOption === 'all' ||
        (filterOption === 'owned' && slab.owned) ||
        (filterOption === 'unowned' && !slab.owned))
     );
-  
-    if (sortOption === 'name') filteredSlabs.sort((a, b) => a.name.localeCompare(b.name));
-    else if (sortOption === 'dex') filteredSlabs.sort((a, b) => a.dexNumber - b.dexNumber);
-    else if (sortOption === 'set') filteredSlabs.sort((a, b) => a.set.localeCompare(b.set));
-    else if (sortOption === 'price') filteredSlabs.sort((a, b) => a.currentPrice - b.currentPrice);
-    else if (sortOption === 'price-desc') filteredSlabs.sort((a, b) => b.currentPrice - a.currentPrice);
+    
+    // 3. Apply sorting
+    if (sortOption === 'name') {
+      filteredSlabs.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortOption === 'dex') {
+      filteredSlabs.sort((a, b) => a.dexNumber - b.dexNumber);
+    } else if (sortOption === 'set') {
+      filteredSlabs.sort((a, b) => a.set.localeCompare(b.set));
+    } else if (sortOption === 'price') {
+      filteredSlabs.sort((a, b) => a.currentPrice - b.currentPrice);
+    } else if (sortOption === 'price-desc') {
+      filteredSlabs.sort((a, b) => b.currentPrice - a.currentPrice);
+    }
+    
   
     slabList.innerHTML = '';
     let ownedCount = 0;
@@ -640,7 +659,9 @@ function renderSlabs(slabs) {
             style="cursor: pointer; color: blue;">
             ${slab.name}
           </strong><br>
-          Dex #: ${slab.dexNumber} | Set: ${slab.set} | Set #: ${slab.setNumber}<br>
+          ${slab.dexNumber === 9999 ? "Trainer" : `Pokédex #${slab.dexNumber}`}<br>
+          Set: ${slab.set}<br>
+          Set ID: ${slab.setNumber}<br>
           Current Price: $${slab.currentPrice?.toFixed(2) || "0.00"}
         </label>
         <button class="edit-slab-btn" data-id="${slab.id}">Edit</button>
@@ -650,6 +671,20 @@ function renderSlabs(slabs) {
 
       li.addEventListener('click', () => openModal(slab));
       slabList.appendChild(li);
+    });
+
+    document.querySelectorAll("input[type='checkbox']").forEach(checkbox => {
+      if (checkbox.name !== "owned") {  // skip owned checkbox in edit forms
+        checkbox.addEventListener("change", async (e) => {
+          const slabId = e.target.dataset.id;
+          const newStatus = e.target.checked;
+          const slabRef = doc(db, "slabs", slabId);
+          await updateDoc(slabRef, { owned: newStatus });
+  
+          slabs.find(s => s.id === slabId).owned = newStatus;
+          renderSlabs(slabs);
+        });
+      }
     });
   
     // modal part
@@ -725,6 +760,8 @@ function renderSlabs(slabs) {
     });
 
     document.getElementById('ownedSlabCountDisplay').textContent = `${ownedCount} / ${filteredSlabs.length} owned`;
+
+    renderSlabSetTabs(slabs);
   }
 
   // Open slab modal example
@@ -736,7 +773,7 @@ function renderSlabs(slabs) {
     modal.classList.add("show");  // ADD THIS LINE to trigger opacity and scale transition
   
     modalContent.innerHTML = imageUrl
-      ? `<img src="${imageUrl}" alt="${slabName}" style="max-width:100%; height:auto; border-radius: 8px;"><p>${slabName}</p>`
+      ? `<img src="${imageUrl}" alt="${slabName}" style="max-width:100%; height:auto; border-radius: 8px;">`
       : `<p>No image found for ${slabName}</p>`;
   }
   
@@ -778,7 +815,7 @@ document.getElementById("addSlabForm").addEventListener("submit", async (e) => {
       setNumber: document.getElementById("slabSetNumber").value,
       currentPrice: parseFloat(document.getElementById("slabPrice").value) || 0,
       imageUrl: document.getElementById("slabImageUrl").value,
-      owned: document.getElementById("owned").checked,
+      owned: document.getElementById("slabOwned").checked,
     };
     console.log("Submitting slab:", newSlab); // ✅ now it's defined!
 
@@ -833,3 +870,84 @@ document.getElementById("csvSlabInput").addEventListener("change", async (e) => 
   alert("Slabs imported successfully!");
 });
 
+function renderSlabSetTabs(slabs) {
+  const tabContainer = document.getElementById("setSlabTabs");
+  tabContainer.innerHTML = "";
+  
+  const sets = [
+      "Base Set", "Jungle", "Fossil", "Base Set 2", "Team Rocket",
+      "Gym Heroes", "Gym Challenge",
+      "Neo Genesis", "Neo Discovery", "Neo Revelation", "Neo Destiny", 
+      "Legendary Collection",
+      "Expedition","Aquapolis", "Skyridge",
+      "EX Ruby & Sapphire", "EX Sandstorm", "EX Dragon", "EX Team Magma vs Team Aqua", "EX Hidden Legends", "EX FireRed & LeafGreen",
+      "EX Team Rocket Returns", "EX Deoxys", "EX Emerald", "EX Unseen Forces", "EX Delta Species", "EX Legend Maker", "EX Holon Phantoms",
+      "EX Crystal Guardians", "EX Dragon Frontiers", "EX Power Keepers",
+      "Diamond & Pearl", "Mysterious Treasures", "Secret Wonders", "Great Encounters", "Majestic Dawn", "Legends Awakened", "Stormfront",
+      "Pop Promos",
+      "Platinum", "Rising Rivals", "Supreme Victors", "Arceus", 
+      "HeartGold & SoulSilver", "Unleashed", "Undaunted", "Triumphant",
+      "Call of Legends",
+      "Black & White", "Emerging Powers", "Noble Victories", "Next Destinies", "Dark Explorers", "Dragons Exalted", "Boundaries Crossed",
+      "Plasma Storm", "Plasma Freeze", "Plasma Blast", "Legendary Treasures", "BW Radiant Collection",
+      "XY Promos", "XY", "Flashfire", "Furious Fists", "Phantom Forces", "Primal Clash", "Double Crisis", "Roaring Skies", "Ancient Origins", 
+      "BREAKthrough", "BREAKpoint", "Generations", "Fates Collide", "Steam Siege", "Evolutions",
+      "Sun & Moon", "Guardians Rising", "Burning Shadows", "Shining Legends", "Crimson Invasion", "Ultra Prism", "Forbidden Light",
+      "Celestial Storm", "Dragon Majesty", "Lost Thunder", "Team Up", "Unbroken Bonds", "Unified Minds", "Hidden Fates", "Cosmic Eclipse",
+      "SWSH Promos", "Sword & Shield", "Rebel Clash", "Darkness Ablaze", "Champion's Path", "Vivid Voltage", "Battle Styles", "Chilling Reign",
+      "Evolving Skies", "Fusion Strike", "Brilliant Stars", "Brilliant Stars Trainer Gallery", "Astral Radiance", "Astral Radiance Trainer Gallery", 
+      "Lost Origin", "Lost Origin Trainer Gallery", "Silver Tempest", "Silver Tempest Trainer Gallery", "Crown Zenith", "Crown Zenith Galarian Gallery",
+      "SV Promos", "Scarlet & Violet", "Paldea Evolved", "Obsidian Flames", "151", "Paradox Rift", "Paldean Fates", "Temporal Forces",
+      "Twilight Masquerade", "Shrouded Fable", "Stellar Crown", "Surging Sparks", "Prismatic Evolutions", "Journey Together", "Destined Rvials",
+      "Black Bolt", "White Flare"
+  ];
+  
+  // Create a lookup map from lowercase set name to proper set name for display
+  const setsMap = new Map();
+  sets.forEach(setName => {
+    setsMap.set(normalizeSetName(setName), setName);
+  });    
+  
+  const slabSetsLower = new Set(slabs.map(slab => normalizeSetName(slab.set)));
+
+  const filteredSets = sets.filter(setName => slabSetsLower.has(normalizeSetName(setName)));
+  
+  const unmatchedSets = [...slabSetsLower].filter(set => !setsMap.has(set));
+  if (unmatchedSets.length > 0) {
+      console.warn("Warning: slab sets not matched to master list:", unmatchedSets);
+  }
+  
+  // Always add "All Sets" tab
+  const allTab = document.createElement("button");
+  allTab.textContent = "📚 All Sets";
+  allTab.className = "tab-button";
+  allTab.addEventListener("click", () => {
+      activeSet = null;
+      renderSlabs(slabs);
+      setActiveTab(null);
+  });
+  tabContainer.appendChild(allTab);
+  
+  // Add tabs for filtered sets, using proper capitalization from setsMap
+  filteredSets.forEach(setName => {
+      const tab = document.createElement("button");
+      tab.textContent = setName; // setName is already proper case
+      tab.className = "tab-button";
+      tab.addEventListener("click", () => {
+      activeSet = setName;
+      renderSlabs(slabs);
+      setActiveTab(setName);
+      });
+      tabContainer.appendChild(tab);
+  });
+  
+  // Highlight the active tab
+  function setActiveTab(setName) {
+      const tabs = tabContainer.querySelectorAll(".tab-button");
+      tabs.forEach(tab => {
+      tab.classList.toggle("active-tab", tab.textContent === setName || (setName === null && tab.textContent === "📚 All Sets"));
+      });
+  }
+  
+  setActiveTab(activeSet);
+}

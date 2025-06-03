@@ -11,7 +11,12 @@ body {
   li {
     margin-bottom: 0.5rem;
   }
-  
+ /* Prevent horizontal scroll */
+html, body {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+ 
 
   .modal {
     display: none;
@@ -99,6 +104,13 @@ body {
     gap: 0.5rem;
     margin: 1rem 0;
   }
+
+  #setSlabTabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin: 1rem 0;
+  }
   
   .tab-button {
     padding: 0.5rem 1rem;
@@ -170,8 +182,7 @@ body {
     align-self: flex-end;
     font-size: 1.5rem;
     cursor: pointer;
-  }
-  
+  } 
   #slabModal.show #slabModalContentWrapper {
     transform: scale(1);
     opacity: 1;
@@ -179,8 +190,6 @@ body {
   label {
     white-space: nowrap;
   }
-  
-  
   #slabCloseModal {
     position: absolute;
     top: 10px;
@@ -207,7 +216,6 @@ body {
     height: auto;
     border-radius: 8px;
   }
-  
 
   @media (max-width: 800px) {
     /* Target all your buttons */

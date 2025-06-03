@@ -3,13 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Browser tab icon -->
   <link rel="icon" href="/dex/static/favicon/favicon-32x32.png" sizes="32x32">
   <link rel="icon" href="/dex/static/favicon/favicon-16x16.png" sizes="16x16">
   <link rel="shortcut icon" href="/dex/static/favicon/favicon.ico" type="image/x-icon" />
-
-  <!-- iOS home screen icon -->
   <link rel="apple-touch-icon" href="/dex/static/favicon/apple-touch-icon.png">
+  <link rel="manifest" href="/dex/static/favicon/site.webmanifest">
 
   <title>My Card Collection</title>
   <link rel="stylesheet" href="style.css">
@@ -86,7 +84,7 @@
                 <input type="text" id="slabSetNumber" placeholder="Set Number" />
                 <input type="number" id="slabPrice" placeholder="Current Price" />
                 <input type="text" id="slabImageUrl" placeholder="Image URL" />
-                <label><input type="checkbox" id="owned" /> Owned</label>
+                <label><input type="checkbox" id="slabOwned" /> Owned</label>
                 <button type="submit">Add Slab</button>
             </form>
 
@@ -98,6 +96,7 @@
             <div>
                 <h2>Slab List</h2>
                 <p id="ownedSlabCountDisplay">0 / 0 owned</p>
+                <div id="setSlabTabs" style="margin-bottom: 1rem;"></div>
                 <input type="text" id="searchSlabInput" placeholder="Search by name...">
                 <label>Sort by:</label>
                 <select id="sortSlabOptions">
