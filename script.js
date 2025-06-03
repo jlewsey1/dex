@@ -634,7 +634,7 @@ function renderSlabs(slabs) {
             <input name="set" value="${slab.set}" required />
             <input name="setNumber" value="${slab.setNumber}" />
             <input name="currentPrice" type="number" step="0.01" value="${slab.currentPrice || 0}" />
-            <input name="imageURL" value="${slab.imageUrl}" required />
+            <input name="imageUrl" value="${slab.imageUrl}" required />
             <label>
               <input name="owned" type="checkbox" ${slab.owned ? "checked" : ""} />
               Owned
