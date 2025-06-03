@@ -106,7 +106,7 @@ function renderCards(dataToRender = cards) {
             <strong class="card-name" data-set="${card.set}" data-setnumber="${card.setNumber}" style="cursor: pointer; color: blue;">
               ${card.name}
             </strong><br>
-            ${card.dexNumber === 9999 ? "Trainer" : `Pokédex #${card.dexNumber}`}<br>
+            ${card.dexNumber === 9999 ? "Trainer" : `Pokédex #${String(card.dexNumber).padStart(4, '0')}`}<br>
             Set: ${card.set}<br>
             Set ID: ${card.setNumber}<br>
             Current Price: $${card.currentPrice?.toFixed(2) || "0.00"}
@@ -659,7 +659,7 @@ function renderSlabs(slabs) {
             style="cursor: pointer; color: blue;">
             ${slab.name}
           </strong><br>
-          ${slab.dexNumber === 9999 ? "Trainer" : `Pokédex #${slab.dexNumber}`}<br>
+          ${slab.dexNumber === 9999 ? "Trainer" : `Pokédex #${String(slab.dexNumber).padStart(4, '0')}`}<br>
           Set: ${slab.set}<br>
           Set ID: ${slab.setNumber}<br>
           Current Price: $${slab.currentPrice?.toFixed(2) || "0.00"}
