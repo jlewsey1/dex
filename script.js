@@ -260,20 +260,20 @@ document.getElementById('searchInput').addEventListener('input', e => {
   
 // add card
 document.getElementById("addCardForm").addEventListener("submit", async (e) => {
-e.preventDefault();
+  e.preventDefault();
 
-const newCard = {
-    name: document.getElementById("cardName").value,
-    dexNumber: parseInt(document.getElementById("dexNumber").value),
-    set: document.getElementById("set").value,
-    setNumber: document.getElementById("setNumber").value,
-    currentPrice: parseFloat(document.getElementById("currentPrice").value) || 0,
-    owned: document.getElementById("owned").checked,
-};
+  const newCard = {
+      name: document.getElementById("cardName").value,
+      dexNumber: parseInt(document.getElementById("dexNumber").value),
+      set: document.getElementById("set").value,
+      setNumber: document.getElementById("setNumber").value,
+      currentPrice: parseFloat(document.getElementById("currentPrice").value) || 0,
+      owned: document.getElementById("owned").checked,
+  };
 
-await addDoc(collection(db, "cards"), newCard);
-await fetchCards(); // Refresh the list
-e.target.reset();   // Clear the form
+  await addDoc(collection(db, "cards"), newCard);
+  await fetchCards(); // Refresh the list
+  e.target.reset();   // Clear the form
 });
 
 // add card from csv
@@ -573,11 +573,6 @@ tabs.forEach(tab => {
 // SLAB STUFF
 let slabs = [];
 
-onSnapshot(collection(db, "slabs"), (snapshot) => {
-  slabs = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-  renderSlabs(slabs);
-});
-
 async function loadSlabs() {
   const slabRef = collection(db, "slabs");
   const slabSnapshot = await getDocs(slabRef);
@@ -822,6 +817,7 @@ document.getElementById("addSlabForm").addEventListener("submit", async (e) => {
 
     await addDoc(collection(db, "slabs"), newSlab);
     e.target.reset(); // Clear form after submission
+    loadSlabs();
     console.log("Slab added successfully!");
   } catch (error) {
     console.error("Error adding slab:", error);
@@ -867,6 +863,7 @@ document.getElementById("csvSlabInput").addEventListener("change", async (e) => 
       console.error("Error adding slab:", err);
     }
   }
+  loadSlabs();
   alert("Slabs imported successfully!");
 });
 
