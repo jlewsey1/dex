@@ -439,7 +439,7 @@ function renderSetTabs() {
         "Black & White", "Emerging Powers", "Noble Victories", "Next Destinies", "Dark Explorers", "Dragons Exalted", "Boundaries Crossed",
         "Plasma Storm", "Plasma Freeze", "Plasma Blast", "Legendary Treasures", "BW Radiant Collection",
         "XY Promos", "XY", "Flashfire", "Furious Fists", "Phantom Forces", "Primal Clash", "Double Crisis", "Roaring Skies", "Ancient Origins", 
-        "BREAKthrough", "BREAKpoint", "Generations", "Fates Collide", "Steam Siege", "Evolutions",
+        "BREAKthrough", "BREAKpoint", "Generations", "Fates Collide", "Steam Siege", "Evolutions", "Shiny Vault",
         "Sun & Moon", "Guardians Rising", "Burning Shadows", "Shining Legends", "Crimson Invasion", "Ultra Prism", "Forbidden Light",
         "Celestial Storm", "Dragon Majesty", "Lost Thunder", "Team Up", "Unbroken Bonds", "Unified Minds", "Hidden Fates", "Cosmic Eclipse",
         "SWSH Promos", "Sword & Shield", "Rebel Clash", "Darkness Ablaze", "Champion's Path", "Vivid Voltage", "Battle Styles", "Chilling Reign",
