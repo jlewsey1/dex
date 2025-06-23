@@ -528,6 +528,7 @@ function normalizeSetName(setName) {
       { from: /^silver tempest trainer gallery$/, to: "silver tempest trainer gallery" },
       { from: /^crown zenith galarian gallery$/, to: "crown zenith galarian gallery" },
       { from: /^bandit ring$/, to: "ancient origins" },
+      { from: /^pokemon center elite trainer box$/, to: "pokémon center elite trainer box" },
       // Add more replacements as you discover variants
     ];
   
@@ -960,5 +961,358 @@ function renderSlabSetTabs(slabs) {
 function updateTotalSlabPrice(filteredSlabs) {
   const total = filteredSlabs.reduce((sum, slab) => sum + (slab.currentPrice || 0), 0);
   const display = document.getElementById("totalSlabPriceDisplay");
+  display.textContent = `Total Price: $${total.toFixed(2)}`;
+}
+
+
+
+
+// BOX STUFF
+let boxes = [];
+
+async function loadBoxes() {
+  const boxRef = collection(db, "boxes");
+  const boxSnapshot = await getDocs(boxRef);
+  boxes = boxSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+  renderBoxes(boxes);
+}
+
+
+function renderBoxes(boxes) {
+    const boxList = document.getElementById('boxList');
+    const searchTerm = document.getElementById('searchBoxInput').value.toLowerCase();
+    const sortOption = document.getElementById('sortBoxOptions').value;
+    const filterOption = document.getElementById('filterBoxOptions').value;
+  
+    let filteredBoxes = boxes;
+
+    // 1. Filter by active tab (set)
+    if (activeSet) {
+      filteredBoxes = filteredBoxes.filter(box => normalizeSetName(box.set) === normalizeSetName(activeSet));
+    }
+    
+    // 2. Apply name search and ownership filter
+    filteredBoxes = filteredBoxes.filter(box =>
+      box.name.toLowerCase().includes(searchTerm) &&
+      (filterOption === 'all' ||
+       (filterOption === 'owned' && box.owned) ||
+       (filterOption === 'unowned' && !box.owned))
+    );
+    
+    // 3. Apply sorting
+    if (sortOption === 'name') {
+      filteredBoxes.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortOption === 'dex') {
+      filteredBoxes.sort((a, b) => a.dexNumber - b.dexNumber);
+    } else if (sortOption === 'set') {
+      filteredBoxes.sort((a, b) => a.set.localeCompare(b.set));
+    } else if (sortOption === 'price') {
+      filteredBoxes.sort((a, b) => a.currentPrice - b.currentPrice);
+    } else if (sortOption === 'price-desc') {
+      filteredBoxes.sort((a, b) => b.currentPrice - a.currentPrice);
+    }
+    
+  
+    boxList.innerHTML = '';
+    let ownedCount = 0;
+  
+    filteredBoxes.forEach(box => {
+      if (box.owned) ownedCount++;
+  
+      const li = document.createElement('li');
+      li.classList.add('box');
+
+      if (box.id === editingId) {
+        // Render edit form for this box
+        li.innerHTML = `
+          <form class="edit-box-form" data-id="${box.id}">
+            <input name="name" value="${box.name}" required />
+            <input name="set" value="${box.set}" required />
+            <input name="currentPrice" type="number" step="0.01" value="${box.currentPrice || 0}" />
+            <input name="imageUrl" value="${box.imageUrl}" required />
+            <label>
+              <input name="owned" type="checkbox" ${box.owned ? "checked" : ""} />
+              Owned
+            </label>
+            <button type="submit">Save</button>
+            <button type="button" class="cancel-box-btn">Cancel</button>
+          </form>
+        `;
+      } else {
+        li.innerHTML = `
+        <label>
+          <input type="checkbox" ${box.owned ? "checked" : ""} data-id="${box.id}">
+          <strong 
+            class="box-name" 
+            data-boxname="${box.name}" 
+            data-imageurl="${box.imageUrl}" 
+            style="cursor: pointer; color: blue;">
+            ${box.name}
+          </strong><br>
+          Set: ${box.set}<br>
+          Current Price: $${box.currentPrice?.toFixed(2) || "0.00"}
+        </label>
+        <button class="edit-box-btn" data-id="${box.id}">Edit</button>
+        <button class="delete-box-btn" data-id="${box.id}">Delete</button>
+      `;
+      }
+
+      li.addEventListener('click', () => openModal(box));
+      boxList.appendChild(li);
+    });
+
+    document.querySelectorAll("input[type='checkbox']").forEach(checkbox => {
+      if (checkbox.name !== "owned") {  // skip owned checkbox in edit forms
+        checkbox.addEventListener("change", async (e) => {
+          const boxId = e.target.dataset.id;
+          const newStatus = e.target.checked;
+          const boxRef = doc(db, "boxes", boxId);
+          await updateDoc(boxRef, { owned: newStatus });
+  
+          boxes.find(b => b.id === boxId).owned = newStatus;
+          renderBoxes(boxes);
+        });
+      }
+    });
+  
+    // modal part
+    document.querySelectorAll(".box-name").forEach(el => {
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+    
+        const imageUrl = el.dataset.imageurl;
+        const boxName = el.dataset.slabname;
+    
+        console.log("Opening modal with:", { imageUrl, boxName });
+
+        openBoxModal(imageUrl, boxName);
+      });
+    });
+    
+    // Edit buttons: just set editingId and re-render
+    document.querySelectorAll(".edit-box-btn").forEach(button => {
+      button.addEventListener("click", (e) => {
+        editingId = e.target.dataset.id;
+        renderBoxes(boxes);
+      });
+    });
+  
+    // Delete buttons
+    document.querySelectorAll(".delete-box-btn").forEach(button => {
+      button.addEventListener("click", async (e) => {
+        const boxId = e.target.dataset.id;
+        if (!confirm("Are you sure you want to delete this box?")) return;
+  
+        await deleteDoc(doc(db, "boxes", boxId));
+        boxes = boxes.filter(b => b.id !== boxId);
+        renderBoxes(boxes);
+      });
+    });
+
+    // Edit form submit
+    document.querySelectorAll(".edit-box-form").forEach(form => {
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const boxId = form.dataset.id;
+  
+        const formData = new FormData(form);
+        const updatedBox = {
+          name: formData.get("name"),
+          set: formData.get("set"),
+          currentPrice: parseFloat(formData.get("currentPrice")) || 0,
+          imageUrl: formData.get("imageUrl"),
+          owned: formData.get("owned") === "on",
+        };
+  
+        const boxRef = doc(db, "boxes", boxId);
+        await updateDoc(boxRef, updatedBox);
+  
+        // Update local data
+        const boxIndex = boxes.findIndex(b => b.id === boxId);
+        boxes[boxIndex] = { id: boxId, ...updatedBox };
+  
+        editingId = null;
+        renderBoxes(boxes);
+      });
+    });
+  
+    // Cancel button (just cancel editing)
+    document.querySelectorAll(".cancel-box-btn").forEach(btn => {
+      btn.addEventListener("click", (e) => {
+        editingId = null;
+        renderBoxes(boxes);
+      });
+    });
+
+    document.getElementById('ownedBoxCountDisplay').textContent = `${ownedCount} / ${filteredBoxes.length} owned`;
+
+    renderBoxSetTabs(boxes);
+    updateTotalBoxPrice(filteredBoxes);
+  }
+
+  // Open slab modal example
+  function openBoxModal(imageUrl, boxName) {
+    const modal = document.getElementById("boxModal");
+    const modalContent = document.getElementById("boxModalContent");
+  
+    modal.style.display = "flex";
+    modal.classList.add("show");  // ADD THIS LINE to trigger opacity and scale transition
+  
+    modalContent.innerHTML = imageUrl
+      ? `<img src="${imageUrl}" alt="${boxName}" style="max-width:100%; height:auto; border-radius: 8px;">`
+      : `<p>No image found for ${boxName}</p>`;
+  }
+  
+
+document.getElementById("boxCloseModal").addEventListener("click", () => {
+  const modal = document.getElementById("boxModal");
+  modal.style.display = "none";
+  modal.classList.remove("show");
+});
+
+  // Close slab modal when clicking outside the content
+document.getElementById("boxModal").addEventListener("click", (e) => {
+  const wrapper = document.getElementById("boxModalContentWrapper");
+
+  // If the click is outside the modal content wrapper, close
+  if (!wrapper.contains(e.target)) {
+    e.stopPropagation(); // Optional: prevent event bubbling
+    document.getElementById("boxModal").style.display = "none";
+    document.getElementById("boxModal").classList.remove("show");
+  }
+});
+
+
+document.getElementById('searchBoxInput').addEventListener('input', () => renderBoxes(boxes));
+document.getElementById('sortBoxOptions').addEventListener('change', () => renderBoxes(boxes));
+document.getElementById('filterBoxOptions').addEventListener('change', () => renderBoxes(boxes));
+
+loadBoxes();
+
+document.getElementById("addBoxForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+
+  try {
+    const newBox = {
+      name: document.getElementById("boxName").value,
+      set: document.getElementById("boxSet").value,
+      currentPrice: parseFloat(document.getElementById("boxPrice").value) || 0,
+      imageUrl: document.getElementById("boxImageUrl").value,
+      owned: document.getElementById("boxOwned").checked,
+    };
+
+    await addDoc(collection(db, "boxes"), newBox);
+    e.target.reset(); // Clear form after submission
+    loadBoxes();
+    console.log("Box added successfully!");
+  } catch (error) {
+    console.error("Error adding box:", error);
+  }
+});
+
+document.getElementById("csvBoxInput").addEventListener("change", async (e) => {
+  console.log("File selected!");
+
+  const file = e.target.files[0];
+  if (!file) return console.warn("No file selected.");
+
+  const text = await file.text();
+  console.log("File contents:", text);
+
+  const rows = text.trim().split("\n");
+  const headers = rows[0].split(",").map(h => h.trim());
+
+  for (let i = 1; i < rows.length; i++) {
+    const values = rows[i].split(",").map(v => v.trim());
+    // Skip empty or incomplete rows
+    if (values.length !== headers.length) {
+      console.warn(`Skipping malformed row ${i + 1}: ${rows[i]}`);
+      continue;
+    }
+    const box = {};
+    headers.forEach((header, idx) => {
+      let val = values[idx];
+      if (header === "currentPrice") {
+        box[header] = parseFloat(val) || 0;
+      } else if (header === "owned") {
+        box[header] = val.toLowerCase() === "true";
+      } else {
+        box[header] = val;
+      }
+    });
+    console.log("Adding box to Firestore:", box);
+    try {
+      await addDoc(collection(db, "boxes"), box);
+    } catch (err) {
+      console.error("Error adding box:", err);
+    }
+  }
+  loadBoxes();
+  alert("Boxes imported successfully!");
+});
+
+function renderBoxSetTabs(boxes) {
+  const tabContainer = document.getElementById("setBoxTabs");
+  tabContainer.innerHTML = "";
+  
+  const sets = [
+      "Elite Trainer Box", "Pokémon Center Elite Trainer Box", "Booster Box", "Ultra Premium Collection Box", 
+      "Premium Collection Box", "Collection Box",, "Other"
+  ];
+  
+  // Create a lookup map from lowercase set name to proper set name for display
+  const setsMap = new Map();
+  sets.forEach(setName => {
+    setsMap.set(normalizeSetName(setName), setName);
+  });    
+  
+  const boxSetsLower = new Set(boxes.map(box => normalizeSetName(box.set)));
+
+  const filteredSets = sets.filter(setName => boxSetsLower.has(normalizeSetName(setName)));
+  
+  const unmatchedSets = [...boxSetsLower].filter(set => !setsMap.has(set));
+  if (unmatchedSets.length > 0) {
+      console.warn("Warning: box sets not matched to master list:", unmatchedSets);
+  }
+  
+  // Always add "All Sets" tab
+  const allTab = document.createElement("button");
+  allTab.textContent = "📚 All Sets";
+  allTab.className = "tab-button";
+  allTab.addEventListener("click", () => {
+      activeSet = null;
+      renderBoxes(boxes);
+      setActiveTab(null);
+  });
+  tabContainer.appendChild(allTab);
+  
+  // Add tabs for filtered sets, using proper capitalization from setsMap
+  filteredSets.forEach(setName => {
+      const tab = document.createElement("button");
+      tab.textContent = setName; // setName is already proper case
+      tab.className = "tab-button";
+      tab.addEventListener("click", () => {
+      activeSet = setName;
+      renderBoxes(boxes);
+      setActiveTab(setName);
+      });
+      tabContainer.appendChild(tab);
+  });
+  
+  // Highlight the active tab
+  function setActiveTab(setName) {
+      const tabs = tabContainer.querySelectorAll(".tab-button");
+      tabs.forEach(tab => {
+      tab.classList.toggle("active-tab", tab.textContent === setName || (setName === null && tab.textContent === "📚 All Sets"));
+      });
+  }
+  
+  setActiveTab(activeSet);
+}
+
+function updateTotalBoxPrice(filteredBoxes) {
+  const total = filteredBoxes.reduce((sum, box) => sum + (box.currentPrice || 0), 0);
+  const display = document.getElementById("totalBoxPriceDisplay");
   display.textContent = `Total Price: $${total.toFixed(2)}`;
 }

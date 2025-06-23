@@ -133,6 +133,49 @@
         <div id="boxCollection" style="display:none;">
             <h1>Box Collection</h1>
             <!-- Put box collection content here -->
+            <h2>Add New Box</h2>
+            <form id="addBoxForm">
+                <input type="text" id="boxName" placeholder="Name" required />
+                <input type="text" id="boxSet" placeholder="Set" required />
+                <input type="number" id="boxPrice" placeholder="Current Price" />
+                <input type="text" id="boxImageUrl" placeholder="Image URL" />
+                <label><input type="checkbox" id="boxOwned" /> Owned</label>
+                <button type="submit">Add Box</button>
+            </form>
+            <div>
+                <h2>Import Boxes from CSV</h2>
+                <input type="file" id="csvBoxInput" accept=".csv" />
+            </div>
+
+            <div>
+                <h2>Box List</h2>
+                <p id="ownedBoxCountDisplay">0 / 0 owned</p>
+                <div id="setBoxTabs" style="margin-bottom: 1rem;"></div>
+                <input type="text" id="searchBoxInput" placeholder="Search by name...">
+                <label>Sort by:</label>
+                <select id="sortBoxOptions">
+                <option value="name">Sort by Name</option>
+                <option value="set">Sort by Set</option>
+                <option value="price">Sort by Price Low->High</option>
+                <option value="price-desc">Sort by Price High->Low</option>
+                </select>
+                
+                <select id="filterBoxOptions">
+                <option value="all">Show All</option>
+                <option value="owned">Owned</option>
+                <option value="unowned">Unowned</option>
+                </select>
+                <p id="totalBoxPriceDisplay">Total Price: $0.00</p>
+
+            </div>
+            
+            <ul id="boxList"></ul>
+            <div id="boxModal" style="display: none; justify-content: center; align-items: center; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.7); z-index: 9999;">
+                <div id="boxModalContentWrapper">
+                    <span id="boxCloseModal">×</span>
+                    <div id="boxModalContent"></div>
+                </div>
+            </div>
         </div>
   
   
