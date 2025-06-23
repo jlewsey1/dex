@@ -240,6 +240,7 @@ function renderCards(dataToRender = cards) {
     renderSetTabs(cards);
     
     updateOwnedCount(filtered);
+    updateTotalCardPrice(filtered);
 }
 
   
@@ -569,6 +570,12 @@ tabs.forEach(tab => {
   });
 });
 
+function updateTotalCardPrice(filteredCards) {
+  const total = filteredCards.reduce((sum, card) => sum + (card.currentPrice || 0), 0);
+  const display = document.getElementById("totalCardPriceDisplay");
+  display.textContent = `Total Price: $${total.toFixed(2)}`;
+}
+
 
 // SLAB STUFF
 let slabs = [];
@@ -757,6 +764,7 @@ function renderSlabs(slabs) {
     document.getElementById('ownedSlabCountDisplay').textContent = `${ownedCount} / ${filteredSlabs.length} owned`;
 
     renderSlabSetTabs(slabs);
+    updateTotalSlabPrice(filteredSlabs);
   }
 
   // Open slab modal example
@@ -947,4 +955,10 @@ function renderSlabSetTabs(slabs) {
   }
   
   setActiveTab(activeSet);
+}
+
+function updateTotalSlabPrice(filteredSlabs) {
+  const total = filteredSlabs.reduce((sum, slab) => sum + (slab.currentPrice || 0), 0);
+  const display = document.getElementById("totalSlabPriceDisplay");
+  display.textContent = `Total Price: $${total.toFixed(2)}`;
 }
