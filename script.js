@@ -4,7 +4,7 @@ import {
     getFirestore, collection, getDocs, doc,
     updateDoc, addDoc, deleteDoc, onSnapshot
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, getRedirectResult} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   
 
 
@@ -1382,3 +1382,12 @@ onAuthStateChanged(auth, (user) => {
     boxCollection.style.display = "none";
   }
 });
+getRedirectResult(auth)
+  .then((result) => {
+    if (result) {
+      console.log("User logged in:", result.user);
+    }
+  })
+  .catch((error) => {
+    console.error("Login error:", error);
+  });
