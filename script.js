@@ -4,6 +4,7 @@ import {
     getFirestore, collection, getDocs, doc,
     updateDoc, addDoc, deleteDoc, onSnapshot
   } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
   
 
 
@@ -250,8 +251,8 @@ function renderCards(dataToRender = cards) {
 sortOptions.addEventListener("change", () => renderCards(cards));
 filterOptions.addEventListener("change", () => renderCards(cards));
 
-// Fetch on page load
-fetchCards();
+// Fetch on page load after login
+// fetchCards();
 
 document.getElementById('searchInput').addEventListener('input', e => {
     const term = e.target.value.toLowerCase();
@@ -445,7 +446,7 @@ function renderSetTabs() {
         "Celestial Storm", "Dragon Majesty", "Lost Thunder", "Team Up", "Unbroken Bonds", "Unified Minds", "Hidden Fates", "Cosmic Eclipse",
         "SWSH Promos", "Sword & Shield", "Rebel Clash", "Darkness Ablaze", "Champion's Path", "Vivid Voltage", "Battle Styles", "Chilling Reign",
         "Evolving Skies", "Fusion Strike", "Brilliant Stars", "Brilliant Stars Trainer Gallery", "Astral Radiance", "Astral Radiance Trainer Gallery", 
-        "Lost Origin", "Lost Origin Trainer Gallery", "Silver Tempest", "Silver Tempest Trainer Gallery", "Crown Zenith", "Crown Zenith Galarian Gallery",
+        "Pokémon Go", "Lost Origin", "Lost Origin Trainer Gallery", "Silver Tempest", "Silver Tempest Trainer Gallery", "Crown Zenith", "Crown Zenith Galarian Gallery",
         "SV Promos", "Scarlet & Violet", "Paldea Evolved", "Obsidian Flames", "151", "Paradox Rift", "Paldean Fates", "Temporal Forces",
         "Twilight Masquerade", "Shrouded Fable", "Stellar Crown", "Surging Sparks", "Prismatic Evolutions", "Journey Together", "Destined Rivals",
         "Black Bolt", "White Flare"
@@ -529,6 +530,7 @@ function normalizeSetName(setName) {
       { from: /^crown zenith galarian gallery$/, to: "crown zenith galarian gallery" },
       { from: /^bandit ring$/, to: "ancient origins" },
       { from: /^pokemon center elite trainer box$/, to: "pokémon center elite trainer box" },
+      { from: /^pokemon go$/, to: "pokémon go" },
       // Add more replacements as you discover variants
     ];
   
@@ -806,7 +808,8 @@ document.getElementById('searchSlabInput').addEventListener('input', () => rende
 document.getElementById('sortSlabOptions').addEventListener('change', () => renderSlabs(slabs));
 document.getElementById('filterSlabOptions').addEventListener('change', () => renderSlabs(slabs));
 
-loadSlabs();
+// do this after login
+// loadSlabs();
 
 document.getElementById("addSlabForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -1188,7 +1191,8 @@ document.getElementById('searchBoxInput').addEventListener('input', () => render
 document.getElementById('sortBoxOptions').addEventListener('change', () => renderBoxes(boxes));
 document.getElementById('filterBoxOptions').addEventListener('change', () => renderBoxes(boxes));
 
-loadBoxes();
+// do after login
+//loadBoxes();
 
 document.getElementById("addBoxForm").addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -1258,7 +1262,7 @@ function renderBoxSetTabs(boxes) {
   
   const sets = [
       "Elite Trainer Box", "Pokémon Center Elite Trainer Box", "Booster Box", "Ultra Premium Collection Box", 
-      "Premium Collection Box", "Collection Box",, "Other"
+      "Premium Collection Box", "Collection Box", "Other"
   ];
   
   // Create a lookup map from lowercase set name to proper set name for display
@@ -1316,3 +1320,65 @@ function updateTotalBoxPrice(filteredBoxes) {
   const display = document.getElementById("totalBoxPriceDisplay");
   display.textContent = `Total Price: $${total.toFixed(2)}`;
 }
+
+
+
+
+// AUTH
+const auth = getAuth(app);
+
+// Handle signup
+document.getElementById("signupForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("signupEmail").value;
+  const password = document.getElementById("signupPassword").value;
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    alert("Signup error: " + err.message);
+  }
+});
+
+// Handle login
+document.getElementById("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("loginEmail").value;
+  const password = document.getElementById("loginPassword").value;
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch (err) {
+    alert("Login error: " + err.message);
+  }
+});
+
+// Handle logout
+document.getElementById("logoutBtn").addEventListener("click", () => {
+  signOut(auth);
+});
+
+// Show/hide content based on auth state
+onAuthStateChanged(auth, (user) => {
+  const loggedIn = !!user;
+
+  document.getElementById("authSection").style.display = loggedIn ? "none" : "block";
+  document.getElementById("logoutBtn").style.display = loggedIn ? "inline-block" : "none";
+
+  // Hide/show your collections
+  const tabs = document.getElementById("tabs");
+  const cardCollection = document.getElementById("cardCollection");
+  const slabCollection = document.getElementById("slabCollection");
+  const boxCollection = document.getElementById("boxCollection");
+
+  if (loggedIn) {
+    tabs.style.display = "block";
+    cardCollection.style.display = "block";
+    fetchCards();
+    loadSlabs();
+    loadBoxes();
+  } else {
+    tabs.style.display = "none";
+    cardCollection.style.display = "none";
+    slabCollection.style.display = "none";
+    boxCollection.style.display = "none";
+  }
+});
