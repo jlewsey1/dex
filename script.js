@@ -401,24 +401,70 @@ document.getElementById("closeModal").addEventListener("click", () => {
 
   
 // update price button
- async function fetchPriceFromPokemonTCG(cardId) {
-    const url = `https://api.pokemontcg.io/v2/cards/${encodeURIComponent(cardId)}`;
-    console.log("Fetching card price from:", url);
+//  async function fetchPriceFromPokemonTCG(cardId) {
+//     const url = `https://api.pokemontcg.io/v2/cards/${encodeURIComponent(cardId)}`;
+//     console.log("Fetching card price from:", url);
     
-    const response = await fetch(url);
-    const data = await response.json();
+//     const response = await fetch(url);
+//     const data = await response.json();
     
-    if (data?.data) {
-        console.log("TCG API response:", data.data);
-        return (
-        data.data.tcgplayer?.prices?.holofoil?.market ||  // preferred price type
-        data.data.tcgplayer?.prices?.normal?.market ||    // fallback
-        null
-        );
-    }
+//     if (data?.data) {
+//         console.log("TCG API response:", data.data);
+//         return (
+//         data.data.tcgplayer?.prices?.holofoil?.market ||  // preferred price type
+//         data.data.tcgplayer?.prices?.normal?.market ||    // fallback
+//         null
+//         );
+//     }
     
-    return null;
-    }
+//     return null;
+//     }
+
+async function fetchPriceFromPokemonTCG(cardId) {
+  const tcgUrl = `https://api.pokemontcg.io/v2/cards/${encodeURIComponent(cardId)}`;
+
+  // Option 1: CORS Anywhere
+  const corsAnywhere = `https://cors-anywhere.herokuapp.com/${tcgUrl}`;
+
+  // Option 2: AllOrigins fallback
+  const allOrigins = `https://api.allorigins.win/get?url=${encodeURIComponent(tcgUrl)}`;
+
+  try {
+      // Try CORS Anywhere first
+      let response = await fetch(corsAnywhere);
+      if (!response.ok) throw new Error(`CORS Anywhere failed: ${response.status}`);
+      let data = await response.json();
+      if (data?.data) {
+          return (
+              data.data.tcgplayer?.prices?.holofoil?.market ||
+              data.data.tcgplayer?.prices?.normal?.market ||
+              null
+          );
+      }
+  } catch (err) {
+      console.warn("CORS Anywhere failed, falling back to AllOrigins:", err);
+
+      try {
+          let response = await fetch(allOrigins);
+          if (!response.ok) throw new Error(`AllOrigins failed: ${response.status}`);
+          let wrappedData = await response.json();
+
+          // AllOrigins wraps the response in 'contents', so we need to parse it
+          let data = JSON.parse(wrappedData.contents);
+
+          return (
+              data.data?.tcgplayer?.prices?.holofoil?.market ||
+              data.data?.tcgplayer?.prices?.normal?.market ||
+              null
+          );
+      } catch (err2) {
+          console.error("Both proxies failed:", err2);
+      }
+  }
+
+  return null;
+}
+
   
 
 function renderSetTabs() {
