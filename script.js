@@ -449,7 +449,7 @@ function renderSetTabs() {
         "Pokémon Go", "Lost Origin", "Lost Origin Trainer Gallery", "Silver Tempest", "Silver Tempest Trainer Gallery", "Crown Zenith", "Crown Zenith Galarian Gallery",
         "SV Promos", "Scarlet & Violet", "Paldea Evolved", "Obsidian Flames", "151", "Paradox Rift", "Paldean Fates", "Temporal Forces",
         "Twilight Masquerade", "Shrouded Fable", "Stellar Crown", "Surging Sparks", "Prismatic Evolutions", "Journey Together", "Destined Rivals",
-        "Black Bolt", "White Flare"
+        "Black Bolt", "White Flare", "Mega Evolution", "Phantasmal Flames"
     ];
     
     // Create a lookup map from lowercase set name to proper set name for display
