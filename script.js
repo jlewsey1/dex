@@ -401,7 +401,7 @@ document.getElementById("closeModal").addEventListener("click", () => {
 
   
 // update price button
-async function fetchPriceFromPokemonTCG(cardId) {
+ async function fetchPriceFromPokemonTCG(cardId) {
     const url = `https://api.pokemontcg.io/v2/cards/${encodeURIComponent(cardId)}`;
     console.log("Fetching card price from:", url);
     
@@ -419,6 +419,7 @@ async function fetchPriceFromPokemonTCG(cardId) {
     
     return null;
     }
+  
 
 function renderSetTabs() {
     const tabContainer = document.getElementById("setTabs");
@@ -449,7 +450,7 @@ function renderSetTabs() {
         "Pokémon Go", "Lost Origin", "Lost Origin Trainer Gallery", "Silver Tempest", "Silver Tempest Trainer Gallery", "Crown Zenith", "Crown Zenith Galarian Gallery",
         "SV Promos", "Scarlet & Violet", "Paldea Evolved", "Obsidian Flames", "151", "Paradox Rift", "Paldean Fates", "Temporal Forces",
         "Twilight Masquerade", "Shrouded Fable", "Stellar Crown", "Surging Sparks", "Prismatic Evolutions", "Journey Together", "Destined Rivals",
-        "Black Bolt", "White Flare", "Mega Evolution", "Phantasmal Flames"
+        "Black Bolt", "White Flare", "Mega Evolution Promos", "Mega Evolution", "Phantasmal Flames"
     ];
     
     // Create a lookup map from lowercase set name to proper set name for display
